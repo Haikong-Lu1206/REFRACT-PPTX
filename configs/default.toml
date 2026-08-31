@@ -1,0 +1,16 @@
+[screening]
+minimum_slides = 3
+maximum_slides = 100
+minimum_shapes = 8
+minimum_quality_score = 0.35
+
+[provenance]
+require_source_uri = true
+require_license = true
+
+[validation]
+require_reference = true
+require_partial_score_tests = true
+require_attack_tests = true
+require_roundtrip_receipt = true
+

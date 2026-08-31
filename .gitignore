@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+pytest-cache-files-*/
+.ruff_cache/
+.test_tmp/
+.venv/
+dist/
+build/
+
+# Source corpora, generated runs, and task bundles stay outside version control.
+corpus/
+runs/
+bundles/
+artifacts/
+*.ppt
+*.pptx
+*.ppsx
+*.pdf
+*.mp4
+*.mov
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Local credentials and provider configuration.
+.env
+*.local.toml
+*.local.yaml

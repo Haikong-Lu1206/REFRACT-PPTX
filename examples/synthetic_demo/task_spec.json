@@ -1,0 +1,43 @@
+{
+  "spec_version": "1.0",
+  "task_id": "synthetic-layout-demo",
+  "title": "Restore an editable project overview slide",
+  "instruction": "Use the supplied reference to restore the damaged slide while preserving all unrelated content and native editability.",
+  "family": "spatial_structure_repair",
+  "source": {
+    "uri": "synthetic://refract/project-overview",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "license": "CC0-1.0",
+    "title": "REFRACT synthetic project overview"
+  },
+  "episodes": [
+    {
+      "episode_id": "layout-01",
+      "family": "spatial_structure_repair",
+      "capability": "connector_alignment",
+      "slides": [2],
+      "mutation": "Reverse one connector and offset its endpoint from the target card.",
+      "evidence_tier": "reference_visible",
+      "observable_evidence": ["reference page 2", "initial slide 2"],
+      "weight": 1.0,
+      "evaluator": {
+        "endpoint_geometry": 0.45,
+        "direction": 0.25,
+        "target_correspondence": 0.30
+      },
+      "acceptance": [
+        "The connector points to the same card shown in the reference.",
+        "The line remains an editable connector."
+      ]
+    }
+  ],
+  "preservation_contracts": [
+    "Slide count and order remain unchanged.",
+    "Untargeted visible content remains semantically and visually stable."
+  ],
+  "assets": {
+    "initial_presentation": "init.pptx",
+    "reference_render": "reference.pdf",
+    "materials_directory": "materials"
+  }
+}
