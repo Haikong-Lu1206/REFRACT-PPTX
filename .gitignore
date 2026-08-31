@@ -10,10 +10,10 @@ dist/
 build/
 
 # Source corpora, generated runs, and task bundles stay outside version control.
-corpus/
-runs/
-bundles/
-artifacts/
+/corpus/
+/runs/
+/bundles/
+/artifacts/
 *.ppt
 *.pptx
 *.ppsx
