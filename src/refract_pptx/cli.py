@@ -10,12 +10,16 @@ from pathlib import Path
 from typing import Any
 
 from refract_pptx import __version__
+from refract_pptx.build import build_task
 from refract_pptx.corpus.discovery import discover_local
 from refract_pptx.corpus.screening import screen_presentation
 from refract_pptx.corpus.zenodo import search_zenodo
+from refract_pptx.design import compile_proposal, load_proposal, proposal_prompt
+from refract_pptx.evaluation import evaluate_candidate
 from refract_pptx.families import registered_families
-from refract_pptx.models import ContractError, load_task_spec
-from refract_pptx.presentation import inspect_pptx
+from refract_pptx.models import ContractError, TaskFamily, load_task_spec
+from refract_pptx.mutation import apply_mutations
+from refract_pptx.presentation import inspect_pptx, object_inventory
 from refract_pptx.reports import render_report
 from refract_pptx.validation import validate_bundle
 
@@ -39,6 +43,13 @@ def _write_jsonl(records: Iterable[dict[str, Any]], path: str) -> int:
             stream.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
             count += 1
     return count
+
+
+def _read_json_object(path: str) -> dict[str, Any]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON root must be an object: {path}")
+    return payload
 
 
 def _presentation_paths(path: str) -> list[Path]:
@@ -130,6 +141,20 @@ def _validate_spec(args: argparse.Namespace) -> int:
     plugin = next((item for item in registered_families() if item.family == spec.family), None)
     if plugin is None:
         issues.append(f"family is not registered: {spec.family.value}")
+    elif spec.family == TaskFamily.MIXED_PRESENTATION_REPAIR:
+        plugins = {item.family: item for item in registered_families()}
+        for episode in spec.episodes:
+            episode_plugin = plugins.get(episode.family)
+            if episode_plugin is None:
+                issues.append(
+                    f"episode {episode.episode_id}: family is not registered: "
+                    f"{episode.family.value}"
+                )
+            else:
+                issues.extend(
+                    f"episode {episode.episode_id}: {item}"
+                    for item in episode_plugin.validate_episode(episode)
+                )
     else:
         for episode in spec.episodes:
             issues.extend(
@@ -152,6 +177,60 @@ def _report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _object_inventory(args: argparse.Namespace) -> int:
+    _write_json(object_inventory(args.path).to_dict(), args.output)
+    return 0
+
+
+def _proposal_prompt(args: argparse.Namespace) -> int:
+    text = proposal_prompt(object_inventory(args.path), tuple(args.evidence))
+    if args.output:
+        target = Path(args.output)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text + "\n", encoding="utf-8")
+    else:
+        print(text)
+    return 0
+
+
+def _compile_proposal(args: argparse.Namespace) -> int:
+    proposal = load_proposal(args.proposal)
+    plan = compile_proposal(proposal, object_inventory(args.presentation))
+    _write_json(plan.to_dict(), args.output)
+    return 0
+
+
+def _mutate(args: argparse.Namespace) -> int:
+    target = apply_mutations(args.presentation, _read_json_object(args.plan), args.output)
+    print(target.resolve())
+    return 0
+
+
+def _evaluate(args: argparse.Namespace) -> int:
+    result = evaluate_candidate(
+        args.candidate,
+        args.initial,
+        _read_json_object(args.plan),
+    )
+    _write_json(result.to_dict(), args.output)
+    return 0
+
+
+def _build_task(args: argparse.Namespace) -> int:
+    result = build_task(
+        args.presentation,
+        args.reference,
+        load_proposal(args.proposal),
+        args.output,
+        task_id=args.task_id,
+        source_uri=args.source_uri,
+        license_name=args.license,
+        materials=args.materials,
+    )
+    _write_json(result.to_dict())
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="refract",
@@ -167,6 +246,13 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_command.add_argument("path")
     inspect_command.add_argument("--output")
     inspect_command.set_defaults(handler=_inspect)
+
+    object_inventory_command = commands.add_parser(
+        "inventory-objects", help="inventory editable objects and native chart semantics"
+    )
+    object_inventory_command.add_argument("path")
+    object_inventory_command.add_argument("--output")
+    object_inventory_command.set_defaults(handler=_object_inventory)
 
     discover = commands.add_parser("discover", help="manifest PPTX files in a local corpus")
     discover.add_argument("path")
@@ -205,6 +291,53 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("input")
     report.add_argument("--output", required=True)
     report.set_defaults(handler=_report)
+
+    prompt = commands.add_parser(
+        "proposal-prompt", help="produce the evidence-limited agent design prompt"
+    )
+    prompt.add_argument("path")
+    prompt.add_argument("--output")
+    prompt.add_argument(
+        "--evidence",
+        action="append",
+        default=[],
+        help="describe an attached reference render or material visible to the design agent",
+    )
+    prompt.set_defaults(handler=_proposal_prompt)
+
+    compile_command = commands.add_parser(
+        "compile-proposal", help="compile a declarative agent proposal against a deck"
+    )
+    compile_command.add_argument("presentation")
+    compile_command.add_argument("proposal")
+    compile_command.add_argument("--output", required=True)
+    compile_command.set_defaults(handler=_compile_proposal)
+
+    mutate = commands.add_parser("mutate", help="apply a compiled mutation plan")
+    mutate.add_argument("presentation")
+    mutate.add_argument("plan")
+    mutate.add_argument("--output", required=True)
+    mutate.set_defaults(handler=_mutate)
+
+    evaluate = commands.add_parser("evaluate", help="score a candidate relative to its init")
+    evaluate.add_argument("candidate")
+    evaluate.add_argument("initial")
+    evaluate.add_argument("plan")
+    evaluate.add_argument("--output")
+    evaluate.set_defaults(handler=_evaluate)
+
+    build = commands.add_parser(
+        "build-task", help="atomically build and validate a task bundle"
+    )
+    build.add_argument("presentation")
+    build.add_argument("proposal")
+    build.add_argument("--reference", required=True)
+    build.add_argument("--output", required=True)
+    build.add_argument("--task-id", required=True)
+    build.add_argument("--source-uri", required=True)
+    build.add_argument("--license", required=True)
+    build.add_argument("--materials")
+    build.set_defaults(handler=_build_task)
     return parser
 
 

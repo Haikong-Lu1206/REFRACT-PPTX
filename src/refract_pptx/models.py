@@ -17,6 +17,7 @@ class TaskFamily(StrEnum):
     REFERENCE_RECONSTRUCTION = "reference_reconstruction"
     SPATIAL_STRUCTURE_REPAIR = "spatial_structure_repair"
     NATIVE_CHART_REPAIR = "native_chart_repair"
+    MIXED_PRESENTATION_REPAIR = "mixed_presentation_repair"
 
 
 class EvidenceTier(StrEnum):
@@ -165,7 +166,10 @@ class TaskSpec:
         episode_ids: set[str] = set()
         for episode in self.episodes:
             issues.extend(episode.validate())
-            if episode.family != self.family:
+            if (
+                self.family != TaskFamily.MIXED_PRESENTATION_REPAIR
+                and episode.family != self.family
+            ):
                 issues.append(f"episode {episode.episode_id}: family differs from task family")
             if episode.episode_id in episode_ids:
                 issues.append(f"duplicate episode_id: {episode.episode_id}")
@@ -200,4 +204,3 @@ def load_task_spec(path: str | Path) -> TaskSpec:
     if not isinstance(payload, dict):
         raise ContractError("task specification root must be an object")
     return TaskSpec.from_dict(payload)
-

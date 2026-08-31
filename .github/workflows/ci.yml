@@ -17,6 +17,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e ".[dev]"
       - run: refract doctor
-      - run: python -c "import refract_pptx.corpus, refract_pptx.families, refract_pptx.validation"
+      - run: >-
+          python -c "import refract_pptx.build, refract_pptx.corpus, refract_pptx.design,
+          refract_pptx.evaluation, refract_pptx.families, refract_pptx.mutation,
+          refract_pptx.validation"
+      - run: refract --help
       - run: ruff check .
       - run: pytest

@@ -14,20 +14,17 @@
     {
       "episode_id": "layout-01",
       "family": "spatial_structure_repair",
-      "capability": "connector_alignment",
-      "slides": [2],
-      "mutation": "Reverse one connector and offset its endpoint from the target card.",
+      "capability": "object_alignment",
+      "slides": [1],
+      "mutation": "Offset one title from the alignment visible in the reference.",
       "evidence_tier": "reference_visible",
-      "observable_evidence": ["reference page 2", "initial slide 2"],
+      "observable_evidence": ["reference page 1", "initial slide 1"],
       "weight": 1.0,
       "evaluator": {
-        "endpoint_geometry": 0.45,
-        "direction": 0.25,
-        "target_correspondence": 0.30
+        "geometry": 1.0
       },
       "acceptance": [
-        "The connector points to the same card shown in the reference.",
-        "The line remains an editable connector."
+        "The title matches the reference position and remains editable."
       ]
     }
   ],

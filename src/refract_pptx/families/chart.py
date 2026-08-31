@@ -10,7 +10,6 @@ class NativeChartRepair(FamilyPlugin):
     supported_capabilities = frozenset(
         {
             "chart_data_repair",
-            "chart_type_repair",
             "series_semantics",
             "chart_layout_repair",
             "chart_style_repair",
@@ -25,7 +24,6 @@ class NativeChartRepair(FamilyPlugin):
         score = min(1.0, 0.45 + charts / 12 + chart_slides / 20) if eligible else 0.0
         capabilities = (
             "chart_data_repair",
-            "chart_type_repair",
             "series_semantics",
             "chart_layout_repair",
             "chart_style_repair",
@@ -37,4 +35,3 @@ class NativeChartRepair(FamilyPlugin):
             evidence=(f"{charts} native charts", f"charts on {chart_slides} slides"),
             suggested_capabilities=capabilities,
         )
-

@@ -4,6 +4,10 @@ A REFRACT task is represented by a versioned, declarative `TaskSpec`. The specif
 what evidence a solver can observe, what must be repaired, how success is measured, and which
 untargeted content must be preserved.
 
+An `AgentProposal` is the design-time input. Compilation resolves human-readable selectors to
+unique source objects and produces a hidden `CompiledPlan` containing oracle targets and
+protected-object contracts. The agent never supplies executable evaluator logic.
+
 ## Evidence tiers
 
 - `reference_visible`: only properties visibly recoverable from the rendered reference may be
@@ -31,6 +35,9 @@ Each episode contains:
 Episode weights must be positive and sum to one across a task. Evaluator components within an
 episode must also sum to one.
 
+Mixed tasks use `mixed_presentation_repair` at the task level while each episode retains its
+own registered family and capability.
+
 ## Validation receipts
 
 Production bundles should carry receipts for:
@@ -42,3 +49,5 @@ Production bundles should carry receipts for:
 - attack variants;
 - asset provenance and source licensing.
 
+The current atomic builder writes package-level initial/oracle and source-hash receipts. Renderer,
+office-roundtrip, and trajectory-calibration receipts remain deployment responsibilities.
