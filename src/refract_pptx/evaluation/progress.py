@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import asdict, dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
-from refract_pptx.design.compiler import CompiledPlan
 from refract_pptx.presentation import DeckSnapshot, ObjectSnapshot, object_inventory
 
 
@@ -34,6 +34,8 @@ def _object_from_dict(value: dict[str, Any]) -> ObjectSnapshot:
         media_part=str(value.get("media_part", "")),
         media_signature=tuple(int(item) for item in value.get("media_signature", [])),
         chart=dict(value.get("chart", {})),
+        table=dict(value.get("table", {})),
+        connector=dict(value.get("connector", {})),
     )
 
 
@@ -71,6 +73,9 @@ def _text_similarity(observed: str, expected: str) -> float:
         return 1.0
     if not first or not second:
         return 0.0
+    numeric = r"[+-]?\d+(?:[.,]\d+)*(?:%|‰)?"
+    if re.findall(numeric, first) != re.findall(numeric, second):
+        return 0.0
     return SequenceMatcher(None, first, second).ratio()
 
 
@@ -106,9 +111,7 @@ def _media_similarity(observed: ObjectSnapshot, expected: ObjectSnapshot) -> flo
     second = expected.media_signature
     if not first or len(first) != len(second):
         return 0.0
-    visual = 1.0 - sum(abs(a - b) for a, b in zip(first, second, strict=True)) / (
-        255 * len(first)
-    )
+    visual = 1.0 - sum(abs(a - b) for a, b in zip(first, second, strict=True)) / (255 * len(first))
     if visual >= 0.985:
         return 1.0
     return _clamp((visual - 0.80) / (0.985 - 0.80))
@@ -131,11 +134,23 @@ def _chart_data_similarity(observed: dict[str, Any], expected: dict[str, Any]) -
             expected_values = [str(item) for item in target.get("values", [])]
             observed_values = [str(item) for item in candidate.get("values", [])]
             count = max(len(expected_values), len(observed_values), 1)
-            values = sum(
-                first == second
-                for first, second in zip(observed_values, expected_values, strict=False)
-            ) / count
-            score = 0.25 * name + 0.75 * values
+            values = (
+                sum(
+                    first == second
+                    for first, second in zip(observed_values, expected_values, strict=False)
+                )
+                / count
+            )
+            expected_categories = target.get("categories", [])
+            observed_categories = candidate.get("categories", [])
+            if expected_categories:
+                categories = sum(
+                    _normal_text(str(a)) == _normal_text(str(b))
+                    for a, b in zip(observed_categories, expected_categories, strict=False)
+                ) / max(len(expected_categories), len(observed_categories), 1)
+                score = 0.1 * name + 0.2 * categories + 0.7 * values
+            else:
+                score = 0.25 * name + 0.75 * values
             if score > best_score:
                 best_index, best_score = index, score
         if best_index >= 0:
@@ -175,6 +190,131 @@ def _series_style_similarity(observed: dict[str, Any], expected: dict[str, Any])
     return cardinality * sum(scores) / len(scores)
 
 
+def _table_cells(table: dict[str, Any]) -> list[dict[str, Any]]:
+    return [cell for row in table.get("rows", []) for cell in row.get("cells", [])]
+
+
+def _table_structure_similarity(observed: dict[str, Any], expected: dict[str, Any]) -> float:
+    if not expected:
+        return float(not observed)
+    dimensions = 0.5 * float(observed.get("row_count") == expected.get("row_count")) + 0.5 * float(
+        observed.get("column_count") == expected.get("column_count")
+    )
+    first = _table_cells(observed)
+    second = _table_cells(expected)
+    count = max(len(first), len(second), 1)
+    merges = (
+        sum(
+            (
+                candidate.get("grid_span", 1),
+                candidate.get("row_span", 1),
+                candidate.get("horizontal_merge", False),
+                candidate.get("vertical_merge", False),
+            )
+            == (
+                target.get("grid_span", 1),
+                target.get("row_span", 1),
+                target.get("horizontal_merge", False),
+                target.get("vertical_merge", False),
+            )
+            for candidate, target in zip(first, second, strict=False)
+        )
+        / count
+    )
+    return 0.6 * dimensions + 0.4 * merges
+
+
+def _table_content_similarity(observed: dict[str, Any], expected: dict[str, Any]) -> float:
+    first = {
+        (r, c): cell
+        for r, row in enumerate(observed.get("rows", []))
+        for c, cell in enumerate(row.get("cells", []))
+    }
+    second = {
+        (r, c): cell
+        for r, row in enumerate(expected.get("rows", []))
+        for c, cell in enumerate(row.get("cells", []))
+    }
+    if not second:
+        return float(not first)
+    count = len(first.keys() | second.keys()) or 1
+    return (
+        sum(
+            _text_similarity(str(first[key].get("text", "")), str(target.get("text", "")))
+            for key, target in second.items()
+            if key in first
+        )
+        / count
+    )
+
+
+def _table_style_similarity(observed: dict[str, Any], expected: dict[str, Any]) -> float:
+    first = _table_cells(observed)
+    second = _table_cells(expected)
+    if not second:
+        return float(not first)
+    count = max(len(first), len(second), 1)
+    score = 0.0
+    for candidate, target in zip(first, second, strict=False):
+        fill = _color_similarity(str(candidate.get("fill", "")), str(target.get("fill", "")))
+        borders = float(candidate.get("borders", []) == target.get("borders", []))
+        score += 0.6 * fill + 0.4 * borders
+    return score / count
+
+
+def _proportion_similarity(observed: list[Any], expected: list[Any]) -> float:
+    if not expected:
+        return float(not observed)
+    if len(observed) != len(expected):
+        return 0.0
+    first = [max(0.0, float(item)) for item in observed]
+    second = [max(0.0, float(item)) for item in expected]
+    first_total = sum(first)
+    second_total = sum(second)
+    if first_total <= 0 or second_total <= 0:
+        return float(first == second)
+    error = (
+        sum(abs(a / first_total - b / second_total) for a, b in zip(first, second, strict=True)) / 2
+    )
+    return _clamp(1.0 - error / 0.20)
+
+
+def _table_proportion_similarity(observed: dict[str, Any], expected: dict[str, Any]) -> float:
+    columns = _proportion_similarity(
+        list(observed.get("column_widths", [])), list(expected.get("column_widths", []))
+    )
+    rows = _proportion_similarity(
+        [row.get("height", 0) for row in observed.get("rows", [])],
+        [row.get("height", 0) for row in expected.get("rows", [])],
+    )
+    return 0.6 * columns + 0.4 * rows
+
+
+def _connector_targets_similarity(observed: dict[str, Any], expected: dict[str, Any]) -> float:
+    start = float(
+        observed.get("start_semantic_key", "") == expected.get("start_semantic_key", "")
+        and observed.get("start", {}).get("site") == expected.get("start", {}).get("site")
+    )
+    end = float(
+        observed.get("end_semantic_key", "") == expected.get("end_semantic_key", "")
+        and observed.get("end", {}).get("site") == expected.get("end", {}).get("site")
+    )
+    return 0.5 * start + 0.5 * end
+
+
+def _connector_style_similarity(observed: dict[str, Any], expected: dict[str, Any]) -> float:
+    return (
+        0.30 * float(observed.get("head") == expected.get("head"))
+        + 0.30 * float(observed.get("tail") == expected.get("tail"))
+        + 0.15 * float(observed.get("preset") == expected.get("preset"))
+        + 0.10 * float(observed.get("line_width") == expected.get("line_width"))
+        + 0.15
+        * _color_similarity(
+            str(observed.get("line_color", "")), str(expected.get("line_color", ""))
+        )
+    )
+
+
 def _component_similarity(
     component: str,
     observed: ObjectSnapshot | None,
@@ -204,6 +344,18 @@ def _component_similarity(
         return _chart_elements_similarity(observed.chart, expected.chart)
     if component == "series_style":
         return _series_style_similarity(observed.chart, expected.chart)
+    if component == "table_structure":
+        return _table_structure_similarity(observed.table, expected.table)
+    if component == "table_content":
+        return _table_content_similarity(observed.table, expected.table)
+    if component == "table_style":
+        return _table_style_similarity(observed.table, expected.table)
+    if component == "table_proportions":
+        return _table_proportion_similarity(observed.table, expected.table)
+    if component == "connector_targets":
+        return _connector_targets_similarity(observed.connector, expected.connector)
+    if component == "connector_style":
+        return _connector_style_similarity(observed.connector, expected.connector)
     raise ValueError(f"unsupported evaluator component: {component}")
 
 
@@ -225,6 +377,10 @@ def _identity_weight(expected: ObjectSnapshot, candidate: ObjectSnapshot) -> flo
         scores.append(0.78)
     if expected.chart and candidate.chart:
         scores.append(0.9 * _chart_data_similarity(candidate.chart, expected.chart))
+    if expected.table and candidate.table:
+        scores.append(0.9 * _table_content_similarity(candidate.table, expected.table))
+    if expected.connector and candidate.connector and expected.name == candidate.name:
+        scores.append(0.88)
     return max(scores)
 
 
@@ -320,8 +476,13 @@ class EvaluationResult:
         return asdict(self)
 
 
-def _plan_dict(plan: CompiledPlan | dict[str, Any]) -> dict[str, Any]:
-    return plan.to_dict() if isinstance(plan, CompiledPlan) else plan
+def _plan_dict(plan: Any) -> dict[str, Any]:
+    if isinstance(plan, dict):
+        return plan
+    converter = getattr(plan, "to_dict", None)
+    if callable(converter):
+        return converter()
+    raise TypeError("plan must be a mapping or expose to_dict()")
 
 
 def _coverage_check(
@@ -332,9 +493,7 @@ def _coverage_check(
 ) -> tuple[float, bool, list[dict[str, Any]]]:
     authorized_ids = {
         (item.slide, item.shape_id)
-        for target, item, weight in zip(
-            expected, expected_matches, expected_weights, strict=True
-        )
+        for target, item, weight in zip(expected, expected_matches, expected_weights, strict=True)
         if item is not None
         and item.kind == "picture"
         and weight >= 0.90
@@ -390,6 +549,15 @@ def _protected_similarity(
         chart_type = float(observed.chart.get("plot") == expected.chart.get("plot"))
         elements = _chart_elements_similarity(observed.chart, expected.chart)
         return 0.45 * data + 0.15 * chart_type + 0.15 * elements + 0.25 * geometry
+    if expected.kind == "table":
+        content = _table_content_similarity(observed.table, expected.table)
+        structure = _table_structure_similarity(observed.table, expected.table)
+        style = _table_style_similarity(observed.table, expected.table)
+        return 0.40 * content + 0.25 * structure + 0.10 * style + 0.25 * geometry
+    if expected.kind == "connector":
+        targets = _connector_targets_similarity(observed.connector, expected.connector)
+        style = _connector_style_similarity(observed.connector, expected.connector)
+        return 0.40 * targets + 0.20 * style + 0.40 * geometry
     visible_components: list[float] = []
     if expected.text:
         visible_components.append(_text_similarity(observed.text, expected.text))
@@ -402,7 +570,7 @@ def _protected_similarity(
 def evaluate_snapshots(
     candidate: DeckSnapshot,
     initial: DeckSnapshot,
-    plan: CompiledPlan | dict[str, Any],
+    plan: Any,
 ) -> EvaluationResult:
     payload = _plan_dict(plan)
     expected_targets: list[ObjectSnapshot] = []
@@ -455,8 +623,7 @@ def evaluate_snapshots(
                 progress = _clamp((candidate_similarity - initial_similarity) / denominator)
             component_scores[name] = round(progress, 6)
         mutation_progress = sum(
-            component_scores[name] * float(weight)
-            for name, weight in mutation["scoring"].items()
+            component_scores[name] * float(weight) for name, weight in mutation["scoring"].items()
         )
         mutation_weight = float(mutation["weight"])
         weighted_progress += mutation_progress * mutation_weight
@@ -468,9 +635,7 @@ def evaluate_snapshots(
                 "identity_confidence": round(
                     sum(candidate_identity[item] for item in group) / len(group), 6
                 ),
-                "matched_shape_id": (
-                    candidate_group[0].shape_id if candidate_group[0] else None
-                ),
+                "matched_shape_id": (candidate_group[0].shape_id if candidate_group[0] else None),
                 "matched_shape_ids": [
                     item.shape_id if item is not None else None for item in candidate_group
                 ],
@@ -538,6 +703,6 @@ def evaluate_snapshots(
 def evaluate_candidate(
     candidate: str | Path,
     initial: str | Path,
-    plan: CompiledPlan | dict[str, Any],
+    plan: Any,
 ) -> EvaluationResult:
     return evaluate_snapshots(object_inventory(candidate), object_inventory(initial), plan)

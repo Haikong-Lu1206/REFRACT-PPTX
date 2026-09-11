@@ -5,11 +5,13 @@ from .chart import NativeChartRepair
 from .mixed import MixedPresentationRepair
 from .reconstruction import ReferenceReconstruction
 from .spatial import SpatialStructureRepair
+from .table import NativeTableRepair
 
 _PLUGINS: tuple[FamilyPlugin, ...] = (
     ReferenceReconstruction(),
     SpatialStructureRepair(),
     NativeChartRepair(),
+    NativeTableRepair(),
     MixedPresentationRepair(),
 )
 
@@ -28,6 +30,7 @@ __all__ = [
     "CapabilityCandidate",
     "FamilyPlugin",
     "MixedPresentationRepair",
+    "NativeTableRepair",
     "family_candidates",
     "registered_families",
 ]

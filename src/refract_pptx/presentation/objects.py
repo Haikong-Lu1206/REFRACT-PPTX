@@ -5,7 +5,7 @@ import io
 import posixpath
 import re
 import zipfile
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree as ET
@@ -159,9 +159,7 @@ def _shape_kind(shape: ET.Element) -> str:
 
 
 def _shape_text(shape: ET.Element) -> str:
-    return " ".join(
-        node.text or "" for node in shape.iter() if _local(node.tag) == "t"
-    ).strip()
+    return " ".join(node.text or "" for node in shape.iter() if _local(node.tag) == "t").strip()
 
 
 def _fill_color(shape: ET.Element) -> str:
@@ -178,6 +176,126 @@ def _fill_color(shape: ET.Element) -> str:
         return ""
     token = color.attrib.get("val", "")
     return f"{_local(color.tag)}:{token}" if token else ""
+
+
+def _solid_fill_color(container: ET.Element | None) -> str:
+    if container is None:
+        return ""
+    solid = next((node for node in container if _local(node.tag) == "solidFill"), None)
+    if solid is None:
+        return ""
+    color = next(iter(solid), None)
+    if color is None:
+        return ""
+    token = color.attrib.get("val", "")
+    return f"{_local(color.tag)}:{token}" if token else ""
+
+
+def _table_snapshot(shape: ET.Element) -> dict[str, Any]:
+    table = next((node for node in shape.iter() if _local(node.tag) == "tbl"), None)
+    if table is None:
+        return {}
+    grid = next((node for node in table if _local(node.tag) == "tblGrid"), None)
+    column_widths = []
+    if grid is not None:
+        for column in grid:
+            if _local(column.tag) != "gridCol":
+                continue
+            try:
+                column_widths.append(round(float(column.attrib.get("w", 0)) / EMU_PER_POINT, 6))
+            except ValueError:
+                column_widths.append(0.0)
+    rows: list[dict[str, Any]] = []
+    for row in (node for node in table if _local(node.tag) == "tr"):
+        try:
+            height = round(float(row.attrib.get("h", 0)) / EMU_PER_POINT, 6)
+        except ValueError:
+            height = 0.0
+        cells = []
+        for cell in (node for node in row if _local(node.tag) == "tc"):
+            properties = next((node for node in cell if _local(node.tag) == "tcPr"), None)
+            borders = []
+            if properties is not None:
+                for border in properties:
+                    side = _local(border.tag)
+                    if side not in {"lnL", "lnR", "lnT", "lnB", "lnTlToBr", "lnBlToTr"}:
+                        continue
+                    color = next(
+                        (
+                            node
+                            for node in border.iter()
+                            if _local(node.tag) in {"srgbClr", "schemeClr"}
+                        ),
+                        None,
+                    )
+                    borders.append(
+                        {
+                            "side": side,
+                            "width": border.attrib.get("w", ""),
+                            "color": (
+                                f"{_local(color.tag)}:{color.attrib.get('val', '')}"
+                                if color is not None
+                                else ""
+                            ),
+                        }
+                    )
+            cells.append(
+                {
+                    "text": _shape_text(cell),
+                    "fill": _solid_fill_color(properties),
+                    "grid_span": int(cell.attrib.get("gridSpan", "1") or 1),
+                    "row_span": int(cell.attrib.get("rowSpan", "1") or 1),
+                    "horizontal_merge": cell.attrib.get("hMerge", "0") in {"1", "true"},
+                    "vertical_merge": cell.attrib.get("vMerge", "0") in {"1", "true"},
+                    "borders": borders,
+                }
+            )
+        rows.append({"height": height, "cells": cells})
+    return {
+        "rows": rows,
+        "row_count": len(rows),
+        "column_count": max((len(row["cells"]) for row in rows), default=len(column_widths)),
+        "column_widths": column_widths,
+    }
+
+
+def _connector_snapshot(shape: ET.Element) -> dict[str, Any]:
+    non_visual = next((node for node in shape.iter() if _local(node.tag) == "cNvCxnSpPr"), None)
+    non_visual_children = non_visual if non_visual is not None else ()
+    start = next((node for node in non_visual_children if _local(node.tag) == "stCxn"), None)
+    end = next((node for node in non_visual_children if _local(node.tag) == "endCxn"), None)
+    properties = next((node for node in shape if _local(node.tag) == "spPr"), None)
+    property_children = properties if properties is not None else ()
+    line = next((node for node in property_children if _local(node.tag) == "ln"), None)
+
+    def connection(node: ET.Element | None) -> dict[str, Any]:
+        if node is None:
+            return {"shape_id": None, "site": None}
+        try:
+            shape_id = int(node.attrib.get("id", ""))
+        except ValueError:
+            shape_id = None
+        try:
+            site = int(node.attrib.get("idx", ""))
+        except ValueError:
+            site = None
+        return {"shape_id": shape_id, "site": site}
+
+    def arrow(local_name: str) -> str:
+        line_children = line if line is not None else ()
+        node = next((item for item in line_children if _local(item.tag) == local_name), None)
+        return node.attrib.get("type", "none") if node is not None else "none"
+
+    preset = next((node for node in shape.iter() if _local(node.tag) == "prstGeom"), None)
+    return {
+        "start": connection(start),
+        "end": connection(end),
+        "head": arrow("headEnd"),
+        "tail": arrow("tailEnd"),
+        "line_width": line.attrib.get("w", "") if line is not None else "",
+        "line_color": _solid_fill_color(line),
+        "preset": preset.attrib.get("prst", "") if preset is not None else "",
+    }
 
 
 def _picture_media(
@@ -200,9 +318,7 @@ def _picture_media(
     return _sha256_bytes(payload), media_part, _image_signature(payload)
 
 
-def _chart_part(
-    shape: ET.Element, relationships: dict[str, dict[str, str]]
-) -> str:
+def _chart_part(shape: ET.Element, relationships: dict[str, dict[str, str]]) -> str:
     reference = next((node for node in shape.iter() if _local(node.tag) == "chart"), None)
     if reference is None:
         return ""
@@ -249,11 +365,7 @@ def _series_color(series: ET.Element) -> str:
     if properties is None:
         return ""
     color = next(
-        (
-            node
-            for node in properties.iter()
-            if _local(node.tag) in {"srgbClr", "schemeClr"}
-        ),
+        (node for node in properties.iter() if _local(node.tag) in {"srgbClr", "schemeClr"}),
         None,
     )
     if color is None:
@@ -282,6 +394,9 @@ def _chart_snapshot(package: zipfile.ZipFile, chart_part: str) -> dict[str, Any]
             {
                 "name": _series_name(node),
                 "values": _series_values(node),
+                "categories": next(
+                    (_series_values(child) for child in node if _local(child.tag) == "cat"), []
+                ),
                 "color": _series_color(node),
             }
         )
@@ -309,6 +424,8 @@ class ObjectSnapshot:
     media_part: str = ""
     media_signature: tuple[int, ...] = ()
     chart: dict[str, Any] = field(default_factory=dict)
+    table: dict[str, Any] = field(default_factory=dict)
+    connector: dict[str, Any] = field(default_factory=dict)
 
     @property
     def semantic_key(self) -> str:
@@ -329,6 +446,14 @@ class ObjectSnapshot:
                 )
             ).encode()
             return f"chart:{hashlib.sha256(payload).hexdigest()}"
+        if self.table:
+            payload = repr(
+                [
+                    [cell.get("text") for cell in row.get("cells", [])]
+                    for row in self.table.get("rows", [])
+                ]
+            ).encode()
+            return f"table:{hashlib.sha256(payload).hexdigest()}"
         return f"{self.kind}:name:{_normal_text(self.name)}"
 
     def to_dict(self) -> dict[str, Any]:
@@ -358,6 +483,45 @@ class DeckSnapshot:
             "slide_count": self.slide_count,
             "objects": [item.to_dict() for item in self.objects],
         }
+
+
+def object_snapshot_from_dict(value: dict[str, Any]) -> ObjectSnapshot:
+    """Rehydrate a frozen object inventory without reading the source deck."""
+    box = value.get("bbox_points")
+    return ObjectSnapshot(
+        slide=int(value["slide"]),
+        slide_part=str(value.get("slide_part", "")),
+        shape_id=int(value["shape_id"]),
+        name=str(value.get("name", "")),
+        kind=str(value.get("kind", "shape")),
+        text=str(value.get("text", "")),
+        bbox_points=tuple(float(item) for item in box) if box is not None else None,
+        z_order=int(value.get("z_order", 0)),
+        fill_color=str(value.get("fill_color", "")),
+        media_sha256=str(value.get("media_sha256", "")),
+        media_part=str(value.get("media_part", "")),
+        media_signature=tuple(int(item) for item in value.get("media_signature", [])),
+        chart=dict(value.get("chart", {})),
+        table=dict(value.get("table", {})),
+        connector=dict(value.get("connector", {})),
+    )
+
+
+def deck_snapshot_from_dict(value: dict[str, Any]) -> DeckSnapshot:
+    """Rehydrate a deck snapshot stored in an evaluator-only asset."""
+    slide_parts = tuple(str(item) for item in value.get("slide_parts", []))
+    objects = tuple(object_snapshot_from_dict(item) for item in value.get("objects", []))
+    snapshot = DeckSnapshot(
+        path=str(value.get("path", "<frozen-inventory>")),
+        slide_width_points=float(value["slide_width_points"]),
+        slide_height_points=float(value["slide_height_points"]),
+        slide_parts=slide_parts,
+        objects=objects,
+    )
+    declared_count = value.get("slide_count")
+    if declared_count is not None and int(declared_count) != snapshot.slide_count:
+        raise ValueError("frozen inventory slide_count differs from slide_parts")
+    return snapshot
 
 
 def object_inventory(path: str | Path) -> DeckSnapshot:
@@ -397,12 +561,18 @@ def object_inventory(path: str | Path) -> DeckSnapshot:
                     media_sha256 = media_part = ""
                     media_signature: tuple[int, ...] = ()
                     chart: dict[str, Any] = {}
+                    table: dict[str, Any] = {}
+                    connector: dict[str, Any] = {}
                     if kind == "picture":
                         media_sha256, media_part, media_signature = _picture_media(
                             package, slide_part, shape, relationships
                         )
                     elif kind == "chart":
                         chart = _chart_snapshot(package, _chart_part(shape, relationships))
+                    elif kind == "table":
+                        table = _table_snapshot(shape)
+                    elif kind == "connector":
+                        connector = _connector_snapshot(shape)
                     objects.append(
                         ObjectSnapshot(
                             slide=slide_number,
@@ -418,8 +588,28 @@ def object_inventory(path: str | Path) -> DeckSnapshot:
                             media_part=media_part,
                             media_signature=media_signature,
                             chart=chart,
+                            table=table,
+                            connector=connector,
                         )
                     )
+            semantic_keys = {(item.slide, item.shape_id): item.semantic_key for item in objects}
+            objects = [
+                replace(
+                    item,
+                    connector={
+                        **item.connector,
+                        "start_semantic_key": semantic_keys.get(
+                            (item.slide, item.connector.get("start", {}).get("shape_id")), ""
+                        ),
+                        "end_semantic_key": semantic_keys.get(
+                            (item.slide, item.connector.get("end", {}).get("shape_id")), ""
+                        ),
+                    },
+                )
+                if item.connector
+                else item
+                for item in objects
+            ]
             return DeckSnapshot(
                 path=str(source),
                 slide_width_points=width,

@@ -12,7 +12,6 @@ class ReferenceReconstruction(FamilyPlugin):
             "picture_restoration",
             "text_reconstruction",
             "table_reconstruction",
-            "diagram_reconstruction",
             "mixed_slide_reconstruction",
         }
     )
@@ -28,9 +27,7 @@ class ReferenceReconstruction(FamilyPlugin):
             capabilities.append("picture_restoration")
         if "table" in object_types:
             capabilities.append("table_reconstruction")
-        if "diagram" in object_types or "group" in object_types:
-            capabilities.append("diagram_reconstruction")
-        if len(capabilities) >= 3:
+        if len(capabilities) >= 2:
             capabilities.append("mixed_slide_reconstruction")
         return CapabilityCandidate(
             family=self.family,
@@ -39,4 +36,3 @@ class ReferenceReconstruction(FamilyPlugin):
             evidence=(f"{slides} slides", f"native types: {', '.join(object_types) or 'none'}"),
             suggested_capabilities=tuple(capabilities),
         )
-

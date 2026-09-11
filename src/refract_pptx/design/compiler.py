@@ -41,6 +41,7 @@ class CompiledPlan:
     slide_width_points: float
     slide_height_points: float
     slide_parts: tuple[str, ...]
+    source_object_count: int
     mutations: tuple[CompiledMutation, ...]
     protected_objects: tuple[dict[str, Any], ...]
     preservation_contracts: tuple[str, ...]
@@ -55,6 +56,7 @@ class CompiledPlan:
             "slide_width_points": self.slide_width_points,
             "slide_height_points": self.slide_height_points,
             "slide_parts": list(self.slide_parts),
+            "source_object_count": self.source_object_count,
             "mutations": [item.to_dict() for item in self.mutations],
             "protected_objects": list(self.protected_objects),
             "preservation_contracts": list(self.preservation_contracts),
@@ -119,7 +121,7 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
             )
         operation = dict(mutation.operation)
         operation_type = operation.get("type")
-        if operation_type == "remove_shape" and target.kind not in {"shape", "picture"}:
+        if operation_type == "remove_shape" and target.kind not in {"shape", "picture", "table"}:
             raise ProposalError(
                 f"mutation {mutation.mutation_id}: removing native {target.kind} objects is not "
                 "registered because dependent package parts require a family-specific mutator"
@@ -131,6 +133,18 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
         if str(operation_type).startswith(("set_chart", "remove_chart")) and target.kind != "chart":
             raise ProposalError(
                 f"mutation {mutation.mutation_id}: chart operations require a native chart"
+            )
+        if str(operation_type).startswith("set_table") and target.kind != "table":
+            raise ProposalError(
+                f"mutation {mutation.mutation_id}: table operations require a native table"
+            )
+        if operation_type in {
+            "reverse_connector",
+            "detach_connector_endpoint",
+            "set_connector_arrowhead",
+        } and target.kind != "connector":
+            raise ProposalError(
+                f"mutation {mutation.mutation_id}: connector operations require a connector"
             )
         if operation_type == "swap_geometry":
             other_selector = operation.get("other_target")
@@ -184,6 +198,7 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
         slide_width_points=inventory.slide_width_points,
         slide_height_points=inventory.slide_height_points,
         slide_parts=inventory.slide_parts,
+        source_object_count=len(inventory.objects),
         mutations=tuple(compiled),
         protected_objects=protected,
         preservation_contracts=proposal.preservation_contracts,

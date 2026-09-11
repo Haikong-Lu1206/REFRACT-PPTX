@@ -266,6 +266,132 @@ def _set_fill(shape: ET.Element, operation: dict[str, Any]) -> None:
     properties.insert(0, solid)
 
 
+def _table(shape: ET.Element) -> ET.Element:
+    table = next((node for node in shape.iter() if _local(node.tag) == "tbl"), None)
+    if table is None:
+        raise MutationError("target is not a native table")
+    return table
+
+
+def _table_cell(shape: ET.Element, operation: dict[str, Any]) -> ET.Element:
+    rows = [node for node in _table(shape) if _local(node.tag) == "tr"]
+    row_index = int(operation.get("row", -1))
+    column_index = int(operation.get("column", -1))
+    if row_index < 0 or row_index >= len(rows):
+        raise MutationError(f"table row is out of range: {row_index}")
+    cells = [node for node in rows[row_index] if _local(node.tag) == "tc"]
+    if column_index < 0 or column_index >= len(cells):
+        raise MutationError(f"table column is out of range: {column_index}")
+    return cells[column_index]
+
+
+def _set_table_cell_fill(shape: ET.Element, operation: dict[str, Any]) -> None:
+    cell = _table_cell(shape, operation)
+    properties = next((node for node in cell if _local(node.tag) == "tcPr"), None)
+    if properties is None:
+        properties = ET.SubElement(cell, f"{{{A_NS}}}tcPr")
+    rgb = str(operation.get("rgb", "")).upper()
+    if not re.fullmatch(r"[0-9A-F]{6}", rgb):
+        raise MutationError("set_table_cell_fill requires a six-digit RGB value")
+    for child in list(properties):
+        if _local(child.tag) in {"noFill", "solidFill", "gradFill", "blipFill", "pattFill"}:
+            properties.remove(child)
+    solid = ET.Element(f"{{{A_NS}}}solidFill")
+    ET.SubElement(solid, f"{{{A_NS}}}srgbClr", {"val": rgb})
+    properties.insert(0, solid)
+
+
+def _set_table_column_width(shape: ET.Element, operation: dict[str, Any]) -> None:
+    grid = next((node for node in _table(shape) if _local(node.tag) == "tblGrid"), None)
+    if grid is None:
+        raise MutationError("native table has no column grid")
+    columns = [node for node in grid if _local(node.tag) == "gridCol"]
+    index = int(operation.get("column", -1))
+    if index < 0 or index >= len(columns):
+        raise MutationError(f"table column is out of range: {index}")
+    width = _number(operation, "width_points", -1)
+    if width <= 1:
+        raise MutationError("table column width must be greater than one point")
+    columns[index].attrib["w"] = str(round(width * EMU_PER_POINT))
+
+
+def _set_table_row_height(shape: ET.Element, operation: dict[str, Any]) -> None:
+    rows = [node for node in _table(shape) if _local(node.tag) == "tr"]
+    index = int(operation.get("row", -1))
+    if index < 0 or index >= len(rows):
+        raise MutationError(f"table row is out of range: {index}")
+    height = _number(operation, "height_points", -1)
+    if height <= 1:
+        raise MutationError("table row height must be greater than one point")
+    rows[index].attrib["h"] = str(round(height * EMU_PER_POINT))
+
+
+def _connector_non_visual(shape: ET.Element) -> ET.Element:
+    node = next((item for item in shape.iter() if _local(item.tag) == "cNvCxnSpPr"), None)
+    if node is None:
+        raise MutationError("target is not a native connector")
+    return node
+
+
+def _reverse_connector(shape: ET.Element) -> None:
+    non_visual = _connector_non_visual(shape)
+    start = next((node for node in non_visual if _local(node.tag) == "stCxn"), None)
+    end = next((node for node in non_visual if _local(node.tag) == "endCxn"), None)
+    if start is None or end is None:
+        raise MutationError("connector must have both attached endpoints to reverse")
+    start_values, end_values = dict(start.attrib), dict(end.attrib)
+    start.attrib.clear()
+    start.attrib.update(end_values)
+    end.attrib.clear()
+    end.attrib.update(start_values)
+    properties = next((node for node in shape if _local(node.tag) == "spPr"), None)
+    property_children = properties if properties is not None else ()
+    line = next((node for node in property_children if _local(node.tag) == "ln"), None)
+    if line is not None:
+        head = next((node for node in line if _local(node.tag) == "headEnd"), None)
+        tail = next((node for node in line if _local(node.tag) == "tailEnd"), None)
+        head_type = head.attrib.get("type", "none") if head is not None else "none"
+        tail_type = tail.attrib.get("type", "none") if tail is not None else "none"
+        if head is None:
+            head = ET.SubElement(line, f"{{{A_NS}}}headEnd")
+        if tail is None:
+            tail = ET.SubElement(line, f"{{{A_NS}}}tailEnd")
+        head.attrib["type"] = tail_type
+        tail.attrib["type"] = head_type
+
+
+def _detach_connector(shape: ET.Element, operation: dict[str, Any]) -> None:
+    endpoint = str(operation.get("endpoint", ""))
+    local_name = {"start": "stCxn", "end": "endCxn"}.get(endpoint)
+    if local_name is None:
+        raise MutationError("connector endpoint must be start or end")
+    non_visual = _connector_non_visual(shape)
+    node = next((item for item in non_visual if _local(item.tag) == local_name), None)
+    if node is None:
+        raise MutationError(f"connector {endpoint} endpoint is already detached")
+    non_visual.remove(node)
+
+
+def _set_connector_arrowhead(shape: ET.Element, operation: dict[str, Any]) -> None:
+    endpoint = str(operation.get("endpoint", ""))
+    local_name = {"start": "headEnd", "end": "tailEnd"}.get(endpoint)
+    if local_name is None:
+        raise MutationError("connector arrow endpoint must be start or end")
+    arrow_type = str(operation.get("arrow_type", ""))
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9]*|none", arrow_type):
+        raise MutationError("connector arrow_type is invalid")
+    properties = next((node for node in shape if _local(node.tag) == "spPr"), None)
+    if properties is None:
+        raise MutationError("connector has no shape properties")
+    line = next((node for node in properties if _local(node.tag) == "ln"), None)
+    if line is None:
+        line = ET.SubElement(properties, f"{{{A_NS}}}ln")
+    arrow = next((node for node in line if _local(node.tag) == local_name), None)
+    if arrow is None:
+        arrow = ET.SubElement(line, f"{{{A_NS}}}{local_name}")
+    arrow.attrib["type"] = arrow_type
+
+
 def _chart_root(
     editor: PackageEditor, slide_part: str, shape: ET.Element
 ) -> tuple[str, ET.Element]:
@@ -377,6 +503,20 @@ def apply_mutations(
             _set_text(target, operation)
         elif operation_type == "set_fill":
             _set_fill(target, operation)
+        elif operation_type == "set_table_cell_text":
+            _set_text(_table_cell(target, operation), operation)
+        elif operation_type == "set_table_cell_fill":
+            _set_table_cell_fill(target, operation)
+        elif operation_type == "set_table_column_width":
+            _set_table_column_width(target, operation)
+        elif operation_type == "set_table_row_height":
+            _set_table_row_height(target, operation)
+        elif operation_type == "reverse_connector":
+            _reverse_connector(target)
+        elif operation_type == "detach_connector_endpoint":
+            _detach_connector(target, operation)
+        elif operation_type == "set_connector_arrowhead":
+            _set_connector_arrowhead(target, operation)
         elif operation_type in {
             "remove_chart_legend",
             "remove_chart_title",

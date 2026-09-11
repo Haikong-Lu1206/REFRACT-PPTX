@@ -3,9 +3,16 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol
 
+from refract_pptx.families import registered_families
 from refract_pptx.presentation import DeckSnapshot
 
-from .proposal import ALLOWED_OPERATIONS, AgentProposal, ProposalError
+from .proposal import (
+    ALLOWED_OPERATIONS,
+    ALLOWED_SCORE_COMPONENTS,
+    OPERATION_SCORE_COMPONENTS,
+    AgentProposal,
+    ProposalError,
+)
 
 
 class ProposalProvider(Protocol):
@@ -20,9 +27,7 @@ XPath, package paths, hidden ground-truth properties, or platform-specific instr
 Every mutation must state accepted equivalent solutions and weighted evaluator components."""
 
 
-def proposal_prompt(
-    inventory: DeckSnapshot, evidence_context: tuple[str, ...] = ()
-) -> str:
+def proposal_prompt(inventory: DeckSnapshot, evidence_context: tuple[str, ...] = ()) -> str:
     compact_objects = [
         {
             "slide": item.slide,
@@ -34,6 +39,11 @@ def proposal_prompt(
             "z_order": item.z_order,
             "has_chart": bool(item.chart),
             "has_media": bool(item.media_sha256),
+            "has_table": bool(item.table),
+            "has_connector_contract": bool(item.connector),
+            "table": item.table,
+            "chart": item.chart,
+            "connector": item.connector,
         }
         for item in inventory.objects
     ]
@@ -48,6 +58,11 @@ def proposal_prompt(
     }
     operation_catalog = {
         family.value: sorted(operations) for family, operations in ALLOWED_OPERATIONS.items()
+    }
+    capability_catalog = {
+        plugin.family.value: sorted(plugin.supported_capabilities)
+        for plugin in registered_families()
+        if plugin.family in ALLOWED_OPERATIONS
     }
     schema = {
         "proposal_version": "1.0",
@@ -88,6 +103,16 @@ def proposal_prompt(
         + json.dumps(schema, indent=2, ensure_ascii=False)
         + "\n\nOPERATION CATALOG\n"
         + json.dumps(operation_catalog, indent=2, ensure_ascii=False)
+        + "\n\nCAPABILITY CATALOG\n"
+        + json.dumps(capability_catalog, indent=2, ensure_ascii=False)
+        + "\n\nSCORING COMPONENTS\n"
+        + json.dumps(sorted(ALLOWED_SCORE_COMPONENTS), indent=2, ensure_ascii=False)
+        + "\n\nOPERATION-SPECIFIC SCORING COMPONENTS\n"
+        + json.dumps(
+            {key: sorted(value) for key, value in OPERATION_SCORE_COMPONENTS.items()},
+            indent=2,
+            ensure_ascii=False,
+        )
         + "\n\nPRESENTATION EVIDENCE\n"
         + json.dumps(evidence, indent=2, ensure_ascii=False)
     )

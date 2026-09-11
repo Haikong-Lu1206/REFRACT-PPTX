@@ -1,0 +1,26 @@
+{
+  "profile_version": "1.0",
+  "adapter": "desktop_base_task",
+  "asset_base_url": "https://huggingface.co/datasets/your-org/your-dataset/resolve/main",
+  "asset_base_env": "REFRACT_ASSET_BASE",
+  "public_namespace": "presentation-tasks/{task_id}",
+  "task_class_dir": "task_class",
+  "task_assets_dir": "task_assets",
+  "public_assets_dir": "public_assets",
+  "desktop_dir": "/home/user/Desktop",
+  "application_command": [
+    "wpp",
+    "{deck_path}"
+  ],
+  "snapshot": "wps",
+  "platform": "linux",
+  "related_apps": [
+    "wps"
+  ],
+  "volume_size": 60,
+  "proxy": false,
+  "disable_vnc": false,
+  "disable_recording": false,
+  "intermediate_eval_safe": false,
+  "source_label": "refract"
+}

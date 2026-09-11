@@ -17,6 +17,7 @@ class TaskFamily(StrEnum):
     REFERENCE_RECONSTRUCTION = "reference_reconstruction"
     SPATIAL_STRUCTURE_REPAIR = "spatial_structure_repair"
     NATIVE_CHART_REPAIR = "native_chart_repair"
+    NATIVE_TABLE_REPAIR = "native_table_repair"
     MIXED_PRESENTATION_REPAIR = "mixed_presentation_repair"
 
 

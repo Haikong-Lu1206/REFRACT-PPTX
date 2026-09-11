@@ -6,6 +6,7 @@ from .base import CapabilityCandidate, FamilyPlugin
 from .chart import NativeChartRepair
 from .reconstruction import ReferenceReconstruction
 from .spatial import SpatialStructureRepair
+from .table import NativeTableRepair
 
 
 class MixedPresentationRepair(FamilyPlugin):
@@ -14,6 +15,7 @@ class MixedPresentationRepair(FamilyPlugin):
         ReferenceReconstruction.supported_capabilities,
         SpatialStructureRepair.supported_capabilities,
         NativeChartRepair.supported_capabilities,
+        NativeTableRepair.supported_capabilities,
     )
 
     def analyze(self, inventory: object) -> CapabilityCandidate:
@@ -21,6 +23,7 @@ class MixedPresentationRepair(FamilyPlugin):
             ReferenceReconstruction().analyze(inventory),
             SpatialStructureRepair().analyze(inventory),
             NativeChartRepair().analyze(inventory),
+            NativeTableRepair().analyze(inventory),
         )
         eligible = [item for item in candidates if item.eligible]
         capabilities = tuple(

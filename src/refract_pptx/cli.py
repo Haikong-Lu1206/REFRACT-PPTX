@@ -10,18 +10,37 @@ from pathlib import Path
 from typing import Any
 
 from refract_pptx import __version__
+from refract_pptx.adapters import (
+    AdapterError,
+    RunnerProfile,
+    adapter_for,
+    validate_emitted_package,
+)
 from refract_pptx.build import build_task
 from refract_pptx.corpus.discovery import discover_local
 from refract_pptx.corpus.screening import screen_presentation
-from refract_pptx.corpus.zenodo import search_zenodo
+from refract_pptx.demo import create_demo
 from refract_pptx.design import compile_proposal, load_proposal, proposal_prompt
 from refract_pptx.evaluation import evaluate_candidate
 from refract_pptx.families import registered_families
 from refract_pptx.models import ContractError, TaskFamily, load_task_spec
 from refract_pptx.mutation import apply_mutations
+from refract_pptx.office import render_pdf
+from refract_pptx.pipeline import BatchRunner, RunState, load_batch_manifest
 from refract_pptx.presentation import inspect_pptx, object_inventory
+from refract_pptx.publication import (
+    copy_public_assets,
+    stage_runner_files,
+    verify_public_assets,
+)
 from refract_pptx.reports import render_report
-from refract_pptx.validation import validate_bundle
+from refract_pptx.validation import (
+    ProductionPolicy,
+    record_blind_review,
+    record_office_roundtrip,
+    validate_bundle,
+    validate_production,
+)
 
 
 def _write_json(value: Any, path: str | None = None) -> None:
@@ -98,16 +117,6 @@ def _discover(args: argparse.Namespace) -> int:
     return 0
 
 
-def _discover_zenodo(args: argparse.Namespace) -> int:
-    records = (
-        record.to_dict()
-        for record in search_zenodo(args.query, pages=args.pages, page_size=args.page_size)
-    )
-    count = _write_jsonl(records, args.output)
-    print(f"wrote {count} remote source records to {args.output}")
-    return 0
-
-
 def _screen(args: argparse.Namespace) -> int:
     paths = _presentation_paths(args.path)
 
@@ -158,8 +167,7 @@ def _validate_spec(args: argparse.Namespace) -> int:
     else:
         for episode in spec.episodes:
             issues.extend(
-                f"episode {episode.episode_id}: {item}"
-                for item in plugin.validate_episode(episode)
+                f"episode {episode.episode_id}: {item}" for item in plugin.validate_episode(episode)
             )
     _write_json({"valid": not issues, "issues": issues, "task_id": spec.task_id})
     return 0 if not issues else 1
@@ -231,6 +239,138 @@ def _build_task(args: argparse.Namespace) -> int:
     return 0
 
 
+def _batch_build(args: argparse.Namespace) -> int:
+    manifest = Path(args.manifest).resolve()
+    output = Path(args.output).resolve()
+    state = Path(args.state).resolve() if args.state else output / "run-state.sqlite"
+    registry = Path(args.registry).resolve() if args.registry else output / "task-registry.sqlite"
+    profile = RunnerProfile.load(args.profile) if args.profile else None
+    result = BatchRunner(
+        output,
+        state_path=state,
+        registry_path=registry,
+        workers=args.workers,
+        task_prefix=args.task_prefix,
+        runner_profile=profile,
+    ).run(load_batch_manifest(manifest))
+    _write_json(result.to_dict(), args.result)
+    return 0 if result.successful == len(result.items) else 1
+
+
+def _run_status(args: argparse.Namespace) -> int:
+    state = RunState(args.state)
+    receipts = [
+        {
+            "item_id": item.item_id,
+            "stage": item.stage,
+            "status": item.status.value,
+            "input_hash": item.input_hash,
+            "output": item.output,
+            "error": item.error,
+            "updated_at": item.updated_at,
+            "attempts": item.attempts,
+            "owner": item.owner,
+            "lease_until": item.lease_until,
+        }
+        for item in state.receipts()
+    ]
+    _write_json({"summary": state.summary(), "receipts": receipts})
+    return 0
+
+
+def _record_blind_review(args: argparse.Namespace) -> int:
+    target = record_blind_review(
+        args.bundle,
+        reviewer=args.reviewer,
+        decision=args.decision,
+        notes=args.notes,
+    )
+    print(target.resolve())
+    return 0
+
+
+def _record_office_roundtrip(args: argparse.Namespace) -> int:
+    target = record_office_roundtrip(
+        args.bundle,
+        args.baseline,
+        args.roundtripped,
+        office_suite=args.office_suite,
+        notes=args.notes,
+    )
+    print(target.resolve())
+    return 0
+
+
+def _validate_production(args: argparse.Namespace) -> int:
+    result = validate_production(args.bundle, ProductionPolicy.load(args.policy))
+    _write_json(result.to_dict(), args.output)
+    return 0 if result.valid else 1
+
+
+def _emit_desktop(args: argparse.Namespace) -> int:
+    if getattr(args, "production", False):
+        result = validate_production(args.bundle, ProductionPolicy.load(args.policy))
+        if not result.valid:
+            _write_json(result.to_dict())
+            return 1
+    profile = RunnerProfile.load(args.profile)
+    package = adapter_for(profile).emit(
+        args.bundle,
+        args.output,
+        profile,
+        runner_task_id=args.task_id,
+    )
+    _write_json(package.to_dict())
+    return 0
+
+
+def _demo(args: argparse.Namespace) -> int:
+    _write_json(create_demo(args.output))
+    return 0
+
+
+def _render_pdf(args: argparse.Namespace) -> int:
+    print(
+        render_pdf(
+            args.presentation, args.output, executable=args.office_executable, timeout=args.timeout
+        )
+    )
+    return 0
+
+
+def _validate_deployment(args: argparse.Namespace) -> int:
+    issues = validate_emitted_package(args.path)
+    _write_json({"valid": not issues, "issues": issues, "path": str(Path(args.path).resolve())})
+    return 0 if not issues else 1
+
+
+def _copy_public_assets(args: argparse.Namespace) -> int:
+    written = copy_public_assets(args.deployment, args.destination)
+    _write_json({"written": written, "count": len(written)})
+    return 0
+
+
+def _verify_public_assets(args: argparse.Namespace) -> int:
+    results = verify_public_assets(
+        args.deployment,
+        asset_base_url=args.asset_base_url,
+        timeout=args.timeout,
+    )
+    _write_json({"verified": results, "count": len(results)})
+    return 0
+
+
+def _stage_runner(args: argparse.Namespace) -> int:
+    written = stage_runner_files(
+        args.deployment,
+        args.runner_root,
+        verify_assets=not args.skip_asset_verification,
+        asset_base_url=args.asset_base_url,
+    )
+    _write_json({"written": written, "count": len(written)})
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="refract",
@@ -238,6 +378,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=__version__)
     commands = parser.add_subparsers(dest="command", required=True)
+
+    demo = commands.add_parser(
+        "demo", help="generate original example inputs and score real repairs"
+    )
+    demo.add_argument("--output", required=True)
+    demo.set_defaults(handler=_demo)
+
+    render = commands.add_parser("render-pdf", help="export a reference with isolated LibreOffice")
+    render.add_argument("presentation")
+    render.add_argument("--output", required=True)
+    render.add_argument("--office-executable")
+    render.add_argument("--timeout", type=int, default=120)
+    render.set_defaults(handler=_render_pdf)
 
     doctor = commands.add_parser("doctor", help="check the local runtime")
     doctor.set_defaults(handler=_doctor)
@@ -260,13 +413,6 @@ def build_parser() -> argparse.ArgumentParser:
     discover.add_argument("--license", default="unknown")
     discover.add_argument("--source-prefix", default="file://")
     discover.set_defaults(handler=_discover)
-
-    zenodo = commands.add_parser("discover-zenodo", help="query Zenodo for PPTX records")
-    zenodo.add_argument("--query", default='filetype:"pptx"')
-    zenodo.add_argument("--pages", type=int, default=1)
-    zenodo.add_argument("--page-size", type=int, default=100)
-    zenodo.add_argument("--output", required=True)
-    zenodo.set_defaults(handler=_discover_zenodo)
 
     screen = commands.add_parser("screen", help="mechanically screen a PPTX corpus")
     screen.add_argument("path")
@@ -326,9 +472,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--output")
     evaluate.set_defaults(handler=_evaluate)
 
-    build = commands.add_parser(
-        "build-task", help="atomically build and validate a task bundle"
-    )
+    build = commands.add_parser("build-task", help="atomically build and validate a task bundle")
     build.add_argument("presentation")
     build.add_argument("proposal")
     build.add_argument("--reference", required=True)
@@ -338,6 +482,100 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--license", required=True)
     build.add_argument("--materials")
     build.set_defaults(handler=_build_task)
+
+    batch = commands.add_parser(
+        "batch-build", help="resume-safe concurrent build from a JSONL manifest"
+    )
+    batch.add_argument("manifest")
+    batch.add_argument("--output", required=True)
+    batch.add_argument("--state")
+    batch.add_argument("--registry")
+    batch.add_argument("--workers", type=int, default=4)
+    batch.add_argument("--task-prefix", default="refract")
+    batch.add_argument("--profile", help="optionally emit runner deployments after each build")
+    batch.add_argument("--result")
+    batch.set_defaults(handler=_batch_build)
+
+    run_status = commands.add_parser("run-status", help="show resumable batch stage state")
+    run_status.add_argument("state")
+    run_status.set_defaults(handler=_run_status)
+
+    blind = commands.add_parser(
+        "record-blind-review", help="record a review using only agent-visible evidence"
+    )
+    blind.add_argument("bundle")
+    blind.add_argument("--reviewer", required=True)
+    blind.add_argument("--decision", choices=("pass", "fail"), required=True)
+    blind.add_argument("--notes", default="")
+    blind.set_defaults(handler=_record_blind_review)
+
+    roundtrip = commands.add_parser(
+        "record-office-roundtrip",
+        help="compare an oracle-quality deck before and after office save",
+    )
+    roundtrip.add_argument("bundle")
+    roundtrip.add_argument("baseline")
+    roundtrip.add_argument("roundtripped")
+    roundtrip.add_argument("--office-suite", required=True)
+    roundtrip.add_argument("--notes", default="")
+    roundtrip.set_defaults(handler=_record_office_roundtrip)
+
+    production = commands.add_parser(
+        "validate-production", help="apply strict publication gates to a bundle"
+    )
+    production.add_argument("bundle")
+    production.add_argument("--policy")
+    production.add_argument("--output")
+    production.set_defaults(handler=_validate_production)
+
+    emit_desktop = commands.add_parser(
+        "emit-desktop", help="adapt a neutral bundle for a BaseTask desktop runner"
+    )
+    emit_desktop.add_argument("bundle")
+    emit_desktop.add_argument("--profile", required=True)
+    emit_desktop.add_argument("--output", required=True)
+    emit_desktop.add_argument("--task-id")
+    emit_desktop.set_defaults(handler=_emit_desktop)
+
+    release = commands.add_parser(
+        "release-desktop", help="validate production evidence then export"
+    )
+    release.add_argument("bundle")
+    release.add_argument("--profile", required=True)
+    release.add_argument("--output", required=True)
+    release.add_argument("--task-id")
+    release.add_argument("--policy")
+    release.set_defaults(handler=_emit_desktop, production=True)
+
+    validate_deployment = commands.add_parser(
+        "validate-deployment", help="validate an emitted runner deployment package"
+    )
+    validate_deployment.add_argument("path")
+    validate_deployment.set_defaults(handler=_validate_deployment)
+
+    copy_public = commands.add_parser(
+        "copy-public-assets", help="copy public task assets into a local dataset or mirror"
+    )
+    copy_public.add_argument("deployment")
+    copy_public.add_argument("destination")
+    copy_public.set_defaults(handler=_copy_public_assets)
+
+    verify_public = commands.add_parser(
+        "verify-public-assets", help="download and hash every published public asset"
+    )
+    verify_public.add_argument("deployment")
+    verify_public.add_argument("--asset-base-url")
+    verify_public.add_argument("--timeout", type=int, default=60)
+    verify_public.set_defaults(handler=_verify_public_assets)
+
+    stage_runner = commands.add_parser(
+        "stage-runner", help="install task code and hidden evaluator assets into a runner"
+    )
+    stage_runner.add_argument("deployment")
+    stage_runner.add_argument("runner_root")
+    stage_runner.add_argument("--asset-base-url")
+    stage_runner.add_argument("--skip-asset-verification", action="store_true")
+    stage_runner.set_defaults(handler=_stage_runner)
     return parser
 
 
@@ -346,6 +584,6 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return int(args.handler(args))
-    except (ContractError, FileNotFoundError, OSError, ValueError) as exc:
+    except (AdapterError, ContractError, FileNotFoundError, OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

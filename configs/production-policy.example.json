@@ -1,0 +1,10 @@
+{
+  "maximum_initial_score": 0.000001,
+  "maximum_roundtrip_score_loss": 0.02,
+  "minimum_oracle_score": 0.999999,
+  "policy_version": "1.0",
+  "require_blind_review": true,
+  "require_known_license": true,
+  "require_office_roundtrip": true,
+  "require_redteam": true
+}

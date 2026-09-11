@@ -31,6 +31,11 @@ Geometry swaps include both targets in the same assignment and score both ends.
 - `z_order`: graded distance in the slide shape tree.
 - `chart_type`, `chart_data`, `chart_elements`, `series_style`: native chart plot type, series
   names and cached values, title/legend presence, and series colors.
+- `table_structure`, `table_content`, `table_style`, `table_proportions`: row/column and merge
+  structure, cell text, cell fill/borders, and normalized row/column dimensions.
+- `connector_targets`, `connector_style`: semantic endpoint objects and connection sites plus
+  arrowheads, line preset, width, and color. Endpoint identity is resolved through the attached
+  objects' semantic keys rather than fixed shape IDs.
 
 ## Preservation and gates
 

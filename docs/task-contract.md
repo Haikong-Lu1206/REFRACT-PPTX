@@ -40,14 +40,15 @@ own registered family and capability.
 
 ## Validation receipts
 
-Production bundles should carry receipts for:
+The atomic builder writes receipts for:
 
 - initial score and oracle score;
 - honest partial repairs;
 - protected-object behavior;
-- package parse and editor roundtrip;
 - attack variants;
 - asset provenance and source licensing.
 
-The current atomic builder writes package-level initial/oracle and source-hash receipts. Renderer,
-office-roundtrip, and trajectory-calibration receipts remain deployment responsibilities.
+Production publication additionally requires a blind-review receipt and a real-office roundtrip
+receipt. Both are bound to the current bundle identity. The office driver itself remains a
+deployment responsibility because WPS and LibreOffice invocation differs by operating system;
+REFRACT records and validates the before/after result with the same evaluator used at rollout.

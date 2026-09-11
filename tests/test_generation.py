@@ -1,6 +1,7 @@
 import io
 import zipfile
 from copy import deepcopy
+from xml.etree import ElementTree as ET
 
 from PIL import Image
 
@@ -10,7 +11,7 @@ from refract_pptx.evaluation import evaluate_candidate
 from refract_pptx.mutation import apply_mutations
 from refract_pptx.mutation.ooxml import PackageEditor
 from refract_pptx.presentation import object_inventory
-from refract_pptx.presentation.objects import P_NS
+from refract_pptx.presentation.objects import A_NS, P_NS
 from refract_pptx.validation import validate_bundle
 
 
@@ -161,6 +162,80 @@ def _repair_plan(plan: dict, operation: dict) -> dict:
     return result
 
 
+def _with_native_table_and_attached_connector(source, output):
+    editor = PackageEditor(source)
+    slide1 = editor.xml("ppt/slides/slide1.xml")
+    table = next(node for node in slide1.iter() if node.tag.endswith("}tbl"))
+    grid = ET.SubElement(table, f"{{{A_NS}}}tblGrid")
+    ET.SubElement(grid, f"{{{A_NS}}}gridCol", {"w": "1905000"})
+    ET.SubElement(grid, f"{{{A_NS}}}gridCol", {"w": "2540000"})
+    row = ET.SubElement(table, f"{{{A_NS}}}tr", {"h": "635000"})
+    for text in ("Metric", "Q2"):
+        cell = ET.SubElement(row, f"{{{A_NS}}}tc")
+        body = ET.SubElement(cell, f"{{{A_NS}}}txBody")
+        ET.SubElement(body, f"{{{A_NS}}}bodyPr")
+        ET.SubElement(body, f"{{{A_NS}}}lstStyle")
+        paragraph = ET.SubElement(body, f"{{{A_NS}}}p")
+        run = ET.SubElement(paragraph, f"{{{A_NS}}}r")
+        ET.SubElement(run, f"{{{A_NS}}}t").text = text
+        properties = ET.SubElement(cell, f"{{{A_NS}}}tcPr")
+        solid = ET.SubElement(properties, f"{{{A_NS}}}solidFill")
+        ET.SubElement(solid, f"{{{A_NS}}}srgbClr", {"val": "D9EAF7"})
+
+    slide2 = editor.xml("ppt/slides/slide2.xml")
+    connector_properties = next(
+        node for node in slide2.iter() if node.tag.endswith("}cNvCxnSpPr")
+    )
+    ET.SubElement(connector_properties, f"{{{A_NS}}}stCxn", {"id": "2", "idx": "1"})
+    ET.SubElement(connector_properties, f"{{{A_NS}}}endCxn", {"id": "3", "idx": "0"})
+    connector_shape = next(node for node in slide2.iter() if node.tag.endswith("}cxnSp"))
+    connector_shape_properties = next(
+        node for node in connector_shape if node.tag == f"{{{P_NS}}}spPr"
+    )
+    line = ET.SubElement(connector_shape_properties, f"{{{A_NS}}}ln")
+    ET.SubElement(line, f"{{{A_NS}}}tailEnd", {"type": "triangle"})
+    return editor.write(output)
+
+
+def _native_proposal(family, capability, slide, target, operation, scoring):
+    return AgentProposal.from_dict(
+        {
+            "proposal_version": "1.0",
+            "title": "Restore one native presentation relationship",
+            "instruction": (
+                "Restore the damaged native presentation object from the visible reference "
+                "while preserving editability and every unrelated object."
+            ),
+            "deck_summary": "A project update with a native table and connected process objects.",
+            "mutations": [
+                {
+                    "mutation_id": "native-repair",
+                    "family": family,
+                    "capability": capability,
+                    "slide": slide,
+                    "target": target,
+                    "operation": operation,
+                    "evidence_tier": "reference_visible",
+                    "evidence": [
+                        {
+                            "source": "reference",
+                            "locator": f"slide {slide} target object",
+                            "supports": "the visible native structure",
+                        }
+                    ],
+                    "rationale": (
+                        "The mutation damages a visible native property without flattening it."
+                    ),
+                    "accepted_solutions": ["Restore an equivalent editable native object."],
+                    "scoring": scoring,
+                    "weight": 1.0,
+                }
+            ],
+            "preservation_contracts": ["Preserve all unrelated visible objects."],
+        }
+    ).require_valid()
+
+
 def test_inventory_exposes_editable_objects_and_native_chart(synthetic_pptx):
     inventory = object_inventory(synthetic_pptx)
 
@@ -174,6 +249,53 @@ def test_inventory_exposes_editable_objects_and_native_chart(synthetic_pptx):
     chart = next(item for item in inventory.objects if item.kind == "chart")
     assert chart.chart["plot"] == "barChart"
     assert chart.chart["series"][0]["values"] == ["12", "18", "27"]
+
+
+def test_native_table_and_connector_semantics_are_mutatable_and_scorable(
+    synthetic_pptx, workspace_tmp
+):
+    source = _with_native_table_and_attached_connector(
+        synthetic_pptx, workspace_tmp / "native-source.pptx"
+    )
+    inventory = object_inventory(source)
+    table = next(item for item in inventory.objects if item.kind == "table")
+    connector = next(item for item in inventory.objects if item.kind == "connector")
+    assert table.table["column_widths"] == [150.0, 200.0]
+    assert [cell["text"] for cell in table.table["rows"][0]["cells"]] == ["Metric", "Q2"]
+    assert connector.connector["start_semantic_key"]
+    assert connector.connector["end_semantic_key"]
+
+    table_plan = compile_proposal(
+        _native_proposal(
+            "native_table_repair",
+            "table_content_repair",
+            1,
+            {"shape_id": 5, "kind": "table"},
+            {"type": "set_table_cell_text", "row": 0, "column": 1, "text": "Wrong"},
+            {"table_content": 1.0},
+        ),
+        inventory,
+    )
+    table_init = apply_mutations(source, table_plan, workspace_tmp / "table-init.pptx")
+    assert evaluate_candidate(table_init, table_init, table_plan).score == 0.0
+    assert evaluate_candidate(source, table_init, table_plan).score == 1.0
+
+    connector_plan = compile_proposal(
+        _native_proposal(
+            "spatial_structure_repair",
+            "connector_alignment",
+            2,
+            {"shape_id": 4, "kind": "connector"},
+            {"type": "reverse_connector"},
+            {"connector_targets": 1.0},
+        ),
+        inventory,
+    )
+    connector_init = apply_mutations(
+        source, connector_plan, workspace_tmp / "connector-init.pptx"
+    )
+    assert evaluate_candidate(connector_init, connector_init, connector_plan).score == 0.0
+    assert evaluate_candidate(source, connector_init, connector_plan).score == 1.0
 
 
 def test_compile_mutate_and_evaluate_monotonic_progress(synthetic_pptx, workspace_tmp):

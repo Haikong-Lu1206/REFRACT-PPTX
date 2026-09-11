@@ -29,6 +29,12 @@ ALLOWED_SCORE_COMPONENTS = frozenset(
         "chart_data",
         "chart_elements",
         "series_style",
+        "table_structure",
+        "table_content",
+        "table_style",
+        "table_proportions",
+        "connector_targets",
+        "connector_style",
     }
 )
 ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
@@ -36,7 +42,15 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
         {"remove_shape", "move_shape", "resize_shape", "set_text", "set_fill"}
     ),
     TaskFamily.SPATIAL_STRUCTURE_REPAIR: frozenset(
-        {"move_shape", "resize_shape", "swap_geometry", "change_z_order"}
+        {
+            "move_shape",
+            "resize_shape",
+            "swap_geometry",
+            "change_z_order",
+            "reverse_connector",
+            "detach_connector_endpoint",
+            "set_connector_arrowhead",
+        }
     ),
     TaskFamily.NATIVE_CHART_REPAIR: frozenset(
         {
@@ -46,6 +60,34 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
             "set_chart_value",
         }
     ),
+    TaskFamily.NATIVE_TABLE_REPAIR: frozenset(
+        {
+            "set_table_cell_text",
+            "set_table_cell_fill",
+            "set_table_column_width",
+            "set_table_row_height",
+        }
+    ),
+}
+
+OPERATION_SCORE_COMPONENTS: dict[str, frozenset[str]] = {
+    "move_shape": frozenset({"geometry"}),
+    "resize_shape": frozenset({"geometry"}),
+    "swap_geometry": frozenset({"geometry", "z_order"}),
+    "change_z_order": frozenset({"z_order"}),
+    "set_text": frozenset({"text"}),
+    "set_fill": frozenset({"fill"}),
+    "remove_chart_legend": frozenset({"chart_elements", "existence", "geometry"}),
+    "remove_chart_title": frozenset({"chart_elements", "existence", "geometry"}),
+    "set_series_color": frozenset({"series_style", "chart_data", "chart_type"}),
+    "set_chart_value": frozenset({"chart_data", "chart_type"}),
+    "set_table_cell_text": frozenset({"table_content", "table_structure"}),
+    "set_table_cell_fill": frozenset({"table_style", "table_structure"}),
+    "set_table_column_width": frozenset({"table_proportions", "geometry"}),
+    "set_table_row_height": frozenset({"table_proportions", "geometry"}),
+    "reverse_connector": frozenset({"connector_targets", "connector_style", "geometry"}),
+    "detach_connector_endpoint": frozenset({"connector_targets", "geometry"}),
+    "set_connector_arrowhead": frozenset({"connector_style"}),
 }
 
 
@@ -120,7 +162,10 @@ class MutationProposal:
         if not self.target:
             issues.append(f"{prefix}: target selector is required")
         operation_type = str(self.operation.get("type", ""))
-        if operation_type not in ALLOWED_OPERATIONS[self.family]:
+        allowed_operations = ALLOWED_OPERATIONS.get(self.family)
+        if allowed_operations is None:
+            issues.append(f"{prefix}: mixed family cannot be used for an individual mutation")
+        elif operation_type not in allowed_operations:
             issues.append(
                 f"{prefix}: operation {operation_type!r} is not allowed for {self.family}"
             )
@@ -138,6 +183,13 @@ class MutationProposal:
             unsupported = sorted(set(self.scoring) - ALLOWED_SCORE_COMPONENTS)
             if unsupported:
                 issues.append(f"{prefix}: unsupported scoring components: {', '.join(unsupported)}")
+            compatible = OPERATION_SCORE_COMPONENTS.get(operation_type)
+            incompatible = sorted(set(self.scoring) - compatible) if compatible is not None else []
+            if incompatible:
+                issues.append(
+                    f"{prefix}: scoring components do not measure {operation_type}: "
+                    + ", ".join(incompatible)
+                )
             if any(not math.isfinite(value) or value <= 0 for value in self.scoring.values()):
                 issues.append(f"{prefix}: scoring weights must be finite and positive")
             elif not math.isclose(sum(self.scoring.values()), 1.0, abs_tol=1e-6):

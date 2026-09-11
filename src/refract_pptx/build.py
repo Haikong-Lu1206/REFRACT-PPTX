@@ -14,7 +14,7 @@ from refract_pptx.evaluation import evaluate_candidate
 from refract_pptx.models import EpisodeSpec, EvidenceTier, SourceRecord, TaskFamily, TaskSpec
 from refract_pptx.mutation import apply_mutations
 from refract_pptx.presentation import object_inventory
-from refract_pptx.validation import validate_bundle
+from refract_pptx.validation import run_redteam, validate_bundle
 
 
 class BuildError(ValueError):
@@ -208,6 +208,10 @@ def build_task(
             "extracted_materials": extracted_materials,
         }
         _write_json(staging / "validation" / "build.json", receipt)
+        redteam = run_redteam(source_path, initial_path, plan, work_directory=staging)
+        _write_json(staging / "validation" / "redteam.json", redteam)
+        if not redteam["valid"]:
+            raise BuildError("red-team validation failed: " + "; ".join(redteam["issues"]))
         validation = validate_bundle(staging)
         if not validation.valid:
             raise BuildError("bundle validation failed: " + "; ".join(validation.issues))
