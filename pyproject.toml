@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "refract-pptx"
-version = "0.5.0"
+version = "0.6.0"
 description = "Agent-guided task factory for editable presentation reconstruction"
 readme = "README.md"
 requires-python = ">=3.11"

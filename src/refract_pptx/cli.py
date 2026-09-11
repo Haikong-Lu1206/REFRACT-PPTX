@@ -41,6 +41,7 @@ from refract_pptx.validation import (
     validate_bundle,
     validate_production,
 )
+from refract_pptx.workspace import build_workspace, init_workspace, prepare_task, workspace_status
 
 
 def _write_json(value: Any, path: str | None = None) -> None:
@@ -338,6 +339,38 @@ def _render_pdf(args: argparse.Namespace) -> int:
     return 0
 
 
+def _init_workspace(args: argparse.Namespace) -> int:
+    print(init_workspace(args.path))
+    return 0
+
+
+def _prepare_task(args: argparse.Namespace) -> int:
+    print(
+        prepare_task(
+            args.presentation,
+            args.output,
+            reference=args.reference,
+            source_uri=args.source_uri,
+            license_name=args.license,
+            materials=args.materials,
+            office_executable=args.office_executable,
+        )
+    )
+    return 0
+
+
+def _workspace_status(args: argparse.Namespace) -> int:
+    result = workspace_status(args.path)
+    _write_json(result)
+    return 0 if result["total"] and result["ready"] == result["total"] else 1
+
+
+def _build_workspace(args: argparse.Namespace) -> int:
+    result = build_workspace(args.path, workers=args.workers)
+    _write_json(result)
+    return 0 if result["successful"] == len(result["items"]) else 1
+
+
 def _validate_deployment(args: argparse.Namespace) -> int:
     issues = validate_emitted_package(args.path)
     _write_json({"valid": not issues, "issues": issues, "path": str(Path(args.path).resolve())})
@@ -378,6 +411,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=__version__)
     commands = parser.add_subparsers(dest="command", required=True)
+
+    init = commands.add_parser("init-workspace", help="create a portable authoring workspace")
+    init.add_argument("path")
+    init.set_defaults(handler=_init_workspace)
+    prepare = commands.add_parser("prepare-task", help="prepare inputs and a design-agent handoff")
+    prepare.add_argument("presentation")
+    prepare.add_argument("--reference", help="omit to export with local LibreOffice")
+    prepare.add_argument("--output", required=True)
+    prepare.add_argument("--source-uri", required=True)
+    prepare.add_argument("--license", required=True)
+    prepare.add_argument("--materials")
+    prepare.add_argument("--office-executable")
+    prepare.set_defaults(handler=_prepare_task)
+    status = commands.add_parser("workspace-status", help="check which designs are ready to build")
+    status.add_argument("path")
+    status.set_defaults(handler=_workspace_status)
+    workspace = commands.add_parser("build-workspace", help="build all ready workspace designs")
+    workspace.add_argument("path")
+    workspace.add_argument("--workers", type=int, default=4)
+    workspace.set_defaults(handler=_build_workspace)
 
     demo = commands.add_parser(
         "demo", help="generate original example inputs and score real repairs"

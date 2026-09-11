@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="890" viewBox="0 0 1400 890" role="img" aria-labelledby="title desc">
+<title id="title">Reward real repairs, not an unchanged baseline</title><desc id="desc">An actual synthetic example: two equally weighted title-position repairs.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#91A3BB"/></marker></defs>
+<rect width="1400" height="100%" rx="24" fill="#F5F8FC"/>
+<text x="48" y="52" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#087F8C" letter-spacing="2">REFRACT / FIELD GUIDE</text>
+<text x="48" y="105" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" fill="#14243C" letter-spacing="0">Reward real repairs, not an unchanged baseline</text>
+<text x="48" y="143" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#60718A" letter-spacing="0">An actual synthetic example: two equally weighted title-position repairs.</text>
+<path d="M48 170 L1352 170" stroke="#DAE2EE" stroke-width="2" fill="none"/>
+<rect x="48" y="209" width="416" height="303" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<text x="70" y="252" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Untouched init</text>
+<rect x="70" y="278" width="178" height="118" rx="6" fill="#F7F9FD" stroke="#D7DFEA"/>
+<rect x="120" y="325" width="92" height="10" rx="3" fill="#B3BECD" stroke="none"/>
+<rect x="87" y="346" width="133" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="87" y="357" width="118" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="87" y="368" width="103" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="260" y="278" width="178" height="118" rx="6" fill="#F7F9FD" stroke="#D7DFEA"/>
+<rect x="310" y="325" width="92" height="10" rx="3" fill="#B3BECD" stroke="none"/>
+<rect x="277" y="346" width="133" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="277" y="357" width="118" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="277" y="368" width="103" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<text x="70" y="477" font-family="Arial, Helvetica, sans-serif" font-size="49" font-weight="700" fill="#60718A" letter-spacing="0">0.00</text>
+<text x="226" y="472" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">measured score</text>
+<rect x="492" y="209" width="416" height="303" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<text x="514" y="252" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">One title repaired</text>
+<rect x="514" y="278" width="178" height="118" rx="6" fill="#F7F9FD" stroke="#D7DFEA"/>
+<rect x="531" y="304" width="92" height="10" rx="3" fill="#087F8C" stroke="none"/>
+<rect x="531" y="346" width="133" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="531" y="357" width="118" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="531" y="368" width="103" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="704" y="278" width="178" height="118" rx="6" fill="#F7F9FD" stroke="#D7DFEA"/>
+<rect x="754" y="325" width="92" height="10" rx="3" fill="#B3BECD" stroke="none"/>
+<rect x="721" y="346" width="133" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="721" y="357" width="118" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="721" y="368" width="103" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<text x="514" y="477" font-family="Arial, Helvetica, sans-serif" font-size="49" font-weight="700" fill="#3466CF" letter-spacing="0">0.50</text>
+<text x="670" y="472" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">measured score</text>
+<rect x="936" y="209" width="416" height="303" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<text x="958" y="252" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Both titles repaired</text>
+<rect x="958" y="278" width="178" height="118" rx="6" fill="#F7F9FD" stroke="#D7DFEA"/>
+<rect x="975" y="304" width="92" height="10" rx="3" fill="#087F8C" stroke="none"/>
+<rect x="975" y="346" width="133" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="975" y="357" width="118" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="975" y="368" width="103" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="1148" y="278" width="178" height="118" rx="6" fill="#F7F9FD" stroke="#D7DFEA"/>
+<rect x="1165" y="304" width="92" height="10" rx="3" fill="#087F8C" stroke="none"/>
+<rect x="1165" y="346" width="133" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="1165" y="357" width="118" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<rect x="1165" y="368" width="103" height="4" rx="2" fill="#CFD8E6" stroke="none"/>
+<text x="958" y="477" font-family="Arial, Helvetica, sans-serif" font-size="49" font-weight="700" fill="#087F8C" letter-spacing="0">1.00</text>
+<text x="1114" y="472" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">measured score</text>
+<text x="48" y="551" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#60718A" letter-spacing="0">Slide drawings are schematic. Scores come from real generated PPTX candidates.</text>
+<rect x="48" y="581" width="1304" height="116" rx="16" fill="#EAF1FD" stroke="#CDDCF8"/>
+<text x="74" y="623" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#3466CF" letter-spacing="1">NORMALIZED COMPONENT PROGRESS</text>
+<text x="74" y="665" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="400" fill="#14243C" letter-spacing="0">clamp((candidate similarity − init similarity) / (1 − init similarity), 0, 1)</text>
+<text x="48" y="748" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#087F8C" letter-spacing="0">Equivalent editable objects</text>
+<text x="48" y="783" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Semantic matching, not original IDs</text>
+<text x="505" y="748" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#087F8C" letter-spacing="0">Graded preservation</text>
+<text x="505" y="783" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Unrelated damage reduces credit</text>
+<text x="953" y="748" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#BA651D" letter-spacing="0">Catastrophic gates</text>
+<text x="953" y="783" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#60718A" letter-spacing="0">Slide count, order, size, full-page paste</text>
+<text x="48" y="840" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#60718A" letter-spacing="0">This smoke test proves the example, not difficulty or compatibility with every editor.</text>
+</svg>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="880" viewBox="0 0 1400 880" role="img" aria-labelledby="title desc">
+<title id="title">Creative design. Deterministic execution.</title><desc id="desc">A declarative contract connects the design agent, factory and independent verifier.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#91A3BB"/></marker></defs>
+<rect width="1400" height="100%" rx="24" fill="#F5F8FC"/>
+<text x="48" y="52" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#087F8C" letter-spacing="2">REFRACT / FIELD GUIDE</text>
+<text x="48" y="105" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" fill="#14243C" letter-spacing="0">Creative design. Deterministic execution.</text>
+<text x="48" y="143" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#60718A" letter-spacing="0">A declarative contract connects the design agent, factory and independent verifier.</text>
+<path d="M48 170 L1352 170" stroke="#DAE2EE" stroke-width="2" fill="none"/>
+<rect x="48" y="207" width="382" height="244" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="68" y="227" width="42" height="34" rx="8" fill="#3466CF" stroke="#3466CF"/>
+<text x="77" y="251" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">A</text>
+<text x="68" y="301" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Design agent</text>
+<text x="68" y="339" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Inspects each deck</text>
+<text x="68" y="368" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Chooses recoverable mutations</text>
+<text x="68" y="397" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">States evidence and equivalents</text>
+<rect x="507" y="207" width="382" height="244" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="527" y="227" width="42" height="34" rx="8" fill="#087F8C" stroke="#087F8C"/>
+<text x="536" y="251" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">B</text>
+<text x="527" y="301" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">REFRACT factory</text>
+<text x="527" y="339" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Validates the proposal</text>
+<text x="527" y="368" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Applies registered OOXML edits</text>
+<text x="527" y="397" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Freezes evaluator contracts</text>
+<rect x="966" y="207" width="386" height="244" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="986" y="227" width="42" height="34" rx="8" fill="#BA651D" stroke="#BA651D"/>
+<text x="995" y="251" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">C</text>
+<text x="986" y="301" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Quality checks</text>
+<text x="986" y="339" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Init / oracle / isolated repair</text>
+<text x="986" y="368" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Blind review + editor roundtrip</text>
+<text x="986" y="397" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Production gate before export</text>
+<path d="M439 315 L494 315" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M898 315 L953 315" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="438" y="293" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#3466CF" letter-spacing="0">JSON</text>
+<text x="896" y="293" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#087F8C" letter-spacing="0">TASK</text>
+<path d="M700 451 L700 489" stroke="#91A3BB" stroke-width="2" fill="none"/>
+<path d="M366 489 L1030 489" stroke="#91A3BB" stroke-width="2" fill="none"/>
+<path d="M366 489 L366 516" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M1030 489 L1030 516" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="48" y="526" width="636" height="213" rx="16" fill="#EAF6F4" stroke="#C5E5E1"/>
+<text x="74" y="569" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#087F8C" letter-spacing="1">SOLVER-VISIBLE INPUTS</text>
+<text x="74" y="612" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Instruction · Init PPTX · Reference PDF</text>
+<text x="74" y="650" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#60718A" letter-spacing="0">Materials needed to reconstruct the editable deck</text>
+<text x="74" y="699" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#087F8C" letter-spacing="0">Published to the agent environment</text>
+<rect x="716" y="526" width="636" height="213" rx="16" fill="#EEF1F9" stroke="#D2D9EA"/>
+<text x="742" y="569" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#3466CF" letter-spacing="1">VERIFIER-ONLY STATE</text>
+<text x="742" y="612" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Plan · Init inventory · Pinned runtime</text>
+<text x="742" y="650" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#60718A" letter-spacing="0">Collected final file is evaluated independently</text>
+<text x="742" y="699" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#3466CF" letter-spacing="0">Kept outside public materials</text>
+<text x="48" y="804" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#60718A" letter-spacing="0">Task content, runner configuration and review evidence remain separate.</text>
+</svg>

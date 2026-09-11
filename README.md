@@ -9,6 +9,10 @@ reasoning with deterministic OOXML mutation, normalized evaluation, and adversar
 The repository contains the framework, contracts, and synthetic examples. It does **not**
 ship generated tasks, source corpora, presentation assets, or private evaluation data.
 
+[Get started](docs/getting-started.md) · [Authoring skill](skills/refract-task-author/SKILL.md) ·
+[Design lessons](docs/task-design.md) · [Runner integration](docs/runner-adapters.md) ·
+[Visual guide](#visual-guide)
+
 ## Why REFRACT
 
 Randomly deleting a shape is easy to automate, but it rarely produces a meaningful task.
@@ -63,6 +67,8 @@ See [Architecture](docs/architecture.md) and [Task contracts](docs/task-contract
 For a complete example without a corpus, model API key, or Office installation:
 
 ```bash
+git clone https://github.com/Haikong-Lu1206/REFRACT-PPTX.git
+cd REFRACT-PPTX
 python -m pip install -e ".[demo]"
 refract demo --output runs/first-demo
 ```
@@ -73,6 +79,55 @@ to design your own tasks, generate references, scale a batch and deploy it. Read
 [task design and evaluation lessons](docs/task-design.md) before scaling.
 
 REFRACT requires Python 3.11 or newer. Pillow provides deterministic image signatures.
+
+## Build your own collection
+
+Start an authoring workspace and prepare your first deck:
+
+```bash
+refract init-workspace my-project
+refract prepare-task source.pptx --reference reference.pdf --output my-project/designs/my-deck --source-uri local://my-deck --license CC-BY-4.0
+```
+
+Omit `--reference` to export a PDF using local LibreOffice. Preparing a task copies inputs,
+checks the reference page count, inventories objects, and creates a design prompt and handoff.
+It does not invent a proposal or upload files to a model.
+
+Give your agent `my-project/designs/my-deck/HANDOFF.md` and its referenced files. Have it write
+`proposal.json` in that directory, then run:
+
+```bash
+refract workspace-status my-project
+refract build-workspace my-project --workers 4
+```
+
+`workspace-status` explains missing or invalid designs. `build-workspace` builds the whole
+collection, records per-task results and resumes unchanged work on rerun. An incomplete design
+is reported before starting the batch. Final bundles are under `my-project/runs/batch/bundles/`.
+
+| You provide | REFRACT handles |
+|---|---|
+| Presentations you may use | Inventory, copied inputs and reference checks |
+| Your agent and its per-deck judgment | Prompt/schema, selector validation and compilation |
+| Blind review and a real target-editor session | Receipts, scoring checks and release gate |
+| Your rollout environment and asset host | Runner adapter and separated public/hidden files |
+
+### Use with an authoring agent
+
+The optional [refract-task-author skill](skills/refract-task-author/SKILL.md) guides a coding
+agent through preparation, per-deck design, validation and handoff. Ask your agent to read that
+file, or copy its folder into your agent application's skill directory. It calls the same CLI;
+it does not bundle a model, API credentials, Office installation, or source corpus.
+
+Example request: “Use the REFRACT authoring skill to prepare tasks from these presentations.
+Inspect each deck, design distinct recoverable mutations, and report which tasks passed validation.”
+
+## Individual commands
+
+For explicit control over each stage, the lower-level commands remain available.
+
+<details>
+<summary>Inspect, design, build, evaluate and export manually</summary>
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -164,6 +219,8 @@ Generate a standalone HTML summary from an inventory or screening JSON/JSONL fil
 refract report screening.jsonl --output report.html
 ```
 
+</details>
+
 ## Repository boundary
 
 Large files and generated task bundles are deliberately excluded from Git. A production
@@ -206,7 +263,7 @@ See [Evaluation](docs/evaluation.md) for the exact current contract.
 
 ## Current boundary
 
-Version 0.5 is an executable, tested foundation, not a claim that every production capability
+Version 0.6 is an executable, tested foundation, not a claim that every production capability
 has been migrated or every editor is compatible. The release gate checks real-review receipts;
 the core test suite does not manufacture real WPS compatibility evidence.
 
@@ -226,3 +283,37 @@ ruff check .
 
 Contributions should not include presentation corpora, generated tasks, or material derived
 from non-redistributable decks. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Design references
+
+We adopt useful authoring patterns from [Harbor's task scaffold and authoring skill](https://www.harborframework.com/docs/tasks)
+and [Verifiers' separation of tasksets, harnesses and traces](https://github.com/PrimeIntellect-ai/verifiers/blob/main/docs/overview.md).
+Here those ideas become a local authoring workspace, a portable agent skill and separate runner
+configuration. These are design influences, not claims of Harbor/Verifiers format compatibility
+or of state-of-the-art benchmark performance. See [the design notes](docs/design-references.md).
+
+## Visual guide
+
+### The complete workflow
+
+An agent designs each task. The factory handles deterministic generation and validation;
+review and a real editor check happen before release.
+
+![Four-stage workflow: prepare inputs, design with an agent, build and test, review and release.](docs/images/workflow.svg)
+
+### The key boundary: public task, private verifier
+
+The solving agent receives the instruction, init, reference and materials. Oracle contracts
+and evaluator runtime remain outside its public inputs.
+
+![Design agent, deterministic factory and quality checks, branching into public inputs and verifier-only state.](docs/images/design-boundaries.svg)
+
+### Scoring actual repair progress
+
+These scores are measured by `refract demo` on real PPTX candidates. The slide drawings below
+are explanatory schematics, not rendered screenshots. The formula describes changed components;
+already-perfect components use the evaluator's unchanged-component branch.
+
+![Two title repairs: untouched init scores zero, one repaired title scores 0.5, and both repaired titles score one.](docs/images/evaluation.svg)
+
+Diagrams are original editable SVGs. Rebuild them with `python scripts/render_readme_diagrams.py`.

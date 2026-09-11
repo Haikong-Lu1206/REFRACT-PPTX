@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+<title id="title">From a presentation to a task batch</title><desc id="desc">Your agent makes the design decisions. REFRACT turns them into testable artifacts.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#91A3BB"/></marker></defs>
+<rect width="1400" height="100%" rx="24" fill="#F5F8FC"/>
+<text x="48" y="52" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#087F8C" letter-spacing="2">REFRACT / FIELD GUIDE</text>
+<text x="48" y="105" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700" fill="#14243C" letter-spacing="0">From a presentation to a task batch</text>
+<text x="48" y="143" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#60718A" letter-spacing="0">Your agent makes the design decisions. REFRACT turns them into testable artifacts.</text>
+<path d="M48 170 L1352 170" stroke="#DAE2EE" stroke-width="2" fill="none"/>
+<rect x="48" y="210" width="308" height="237" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="68" y="230" width="42" height="34" rx="8" fill="#087F8C" stroke="#087F8C"/>
+<text x="77" y="254" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">01</text>
+<text x="68" y="304" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Prepare</text>
+<text x="68" y="342" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">PPTX + reference PDF</text>
+<text x="68" y="371" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Record source and license</text>
+<text x="68" y="400" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Export PDF if needed</text>
+<path d="M360 325 L376 325" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="380" y="210" width="308" height="237" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="400" y="230" width="42" height="34" rx="8" fill="#3466CF" stroke="#3466CF"/>
+<text x="409" y="254" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">02</text>
+<text x="400" y="304" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Design with an agent</text>
+<text x="400" y="342" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Read the actual slides</text>
+<text x="400" y="371" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Choose meaningful repairs</text>
+<text x="400" y="400" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Write proposal.json</text>
+<path d="M692 325 L708 325" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="712" y="210" width="308" height="237" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="732" y="230" width="42" height="34" rx="8" fill="#087F8C" stroke="#087F8C"/>
+<text x="741" y="254" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">03</text>
+<text x="732" y="304" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Build + test</text>
+<text x="732" y="342" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Compile, mutate, evaluate</text>
+<text x="732" y="371" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Check init and oracle</text>
+<text x="732" y="400" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Run built-in red-team</text>
+<path d="M1024 325 L1040 325" stroke="#91A3BB" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="1044" y="210" width="308" height="237" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<rect x="1064" y="230" width="42" height="34" rx="8" fill="#BA651D" stroke="#BA651D"/>
+<text x="1073" y="254" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" letter-spacing="0">04</text>
+<text x="1064" y="304" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">Review + release</text>
+<text x="1064" y="342" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Blind review + editor test</text>
+<text x="1064" y="371" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Export public / hidden files</text>
+<text x="1064" y="400" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="400" fill="#60718A" letter-spacing="0">Canary, then scale</text>
+<rect x="48" y="482" width="1304" height="145" rx="16" fill="#EAF1FD" stroke="#CDDCF8"/>
+<text x="72" y="519" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#3466CF" letter-spacing="1.5">A WORKSPACE YOU CAN RESUME</text>
+<text x="72" y="557" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">designs/</text>
+<text x="72" y="591" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#60718A" letter-spacing="0">Inputs, inventory, prompt, proposal</text>
+<text x="525" y="557" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">runs/batch/</text>
+<text x="525" y="591" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#60718A" letter-spacing="0">Bundles, state, stable task IDs</text>
+<text x="986" y="557" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#14243C" letter-spacing="0">configs/</text>
+<text x="986" y="591" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#60718A" letter-spacing="0">Runner and release policy</text>
+<rect x="48" y="661" width="1304" height="173" rx="16" fill="#FFFFFF" stroke="#DFE6F0"/>
+<text x="72" y="702" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" fill="#087F8C" letter-spacing="0">START SMALL. INSPECT REAL OUTPUTS. THEN ADD WORKERS.</text>
+<text x="72" y="744" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#14243C" letter-spacing="0">init-workspace  →  prepare-task  →  workspace-status  →  build-workspace</text>
+<text x="72" y="788" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#60718A" letter-spacing="0">Model access and target-editor validation stay in your own workflow.</text>
+</svg>

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+- Workspace initialization, task preparation and explicit design-agent handoff.
+- Readiness diagnostics and resumable workspace batch builds without manual JSONL assembly.
+- Optional portable authoring skill using the same CLI and evidence rules.
+- README visual guide: lifecycle, verifier separation, and measured demo progress.
+- Original reproducible SVG diagrams; no historical task assets included.
+
 ## 0.5.0
 
 - Original-input demo with real 0 / 0.5 / 1 candidate evaluations.

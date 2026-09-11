@@ -1,5 +1,10 @@
 # From installation to your first batch
 
+For the shortest real-task path, use `init-workspace`, `prepare-task`, `workspace-status`, and
+`build-workspace` as shown in the README. The detailed commands below remain available for
+custom pipelines. The optional [authoring skill](../skills/refract-task-author/SKILL.md) can
+guide your own agent through either path.
+
 ## 1. Run a complete local example
 
 Use Python 3.11 or newer in a virtual environment. From the repository root:
