@@ -53,9 +53,13 @@ replacing the actual values.
 
 ## Still outside the supported contracts
 
+Native SmartArt now has a [bounded implementation](smartart.md): three registered operations,
+ordered-tree correspondence, drawing-cache consistency and normalized node geometry. It uses
+an additive `smartart` snapshot field; existing bundled runtimes remain unchanged.
+
 | Capability | Why it is not advertised as complete |
 |---|---|
-| SmartArt semantic/topology reconstruction | Needs graph matching and consistency with editor-generated drawing caches |
+| Arbitrary SmartArt restructuring | Branch creation/deletion, automatic layout regeneration, nested drawing caches and ambiguous associations are not supported |
 | Nested groups and rendered occlusion | Needs recursive coordinate transforms and a rendering-based visibility check |
 | Equations | Needs native math equivalence and editor rendering verification |
 | Animation, click groups, motion paths, transitions and Morph | Needs target/order/timing contracts and real playback acceptance |

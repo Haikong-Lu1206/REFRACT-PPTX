@@ -47,6 +47,7 @@ def proposal_prompt(inventory: DeckSnapshot, evidence_context: tuple[str, ...] =
             "connector": item.connector,
             "visual": item.visual,
             "typography": item.typography,
+            "smartart": item.smartart,
         }
         for item in inventory.objects
     ]

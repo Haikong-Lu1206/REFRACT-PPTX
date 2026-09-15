@@ -1,6 +1,18 @@
 """Operation arguments supplied to design agents; names share the compiler registry."""
 
 OPERATION_ARGUMENTS = {
+    "set_smartart_text": {
+        "node_index": "zero-based preorder node index from SmartArt inventory",
+        "text": "replacement text; empty erases the label",
+    },
+    "swap_smartart_text": {
+        "node_index": "zero-based preorder node index",
+        "other_node_index": "distinct node with different text",
+    },
+    "set_smartart_fill": {
+        "node_index": "zero-based preorder node index",
+        "rgb": "six hex digits; explicit source RGB required",
+    },
     "set_paragraph_alignment": {
         "paragraph_index": "zero-based",
         "alignment": "l, ctr, r or just; explicit source alignment required",

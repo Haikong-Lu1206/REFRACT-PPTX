@@ -61,6 +61,10 @@ documented implementation choices, not measured GUI accuracy guarantees.
 
 ## Preservation and gates
 
+`smartart_structure` evaluates native ordered-node correspondence, data/display agreement,
+cardinality, normalized node geometry and supported visible style. See the
+[SmartArt contract](smartart.md) for its equation, tolerances and deliberately bounded coverage.
+
 Every untargeted top-level visible object becomes a protected contract. Text, fill, geometry,
 picture content, and native chart semantics are compared independently of ID continuity. Losses
 are graded and capped so small collateral changes do not immediately zero the task.

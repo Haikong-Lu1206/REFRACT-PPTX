@@ -9,6 +9,7 @@ from typing import Any
 
 from refract_pptx.presentation import DeckSnapshot, ObjectSnapshot, object_inventory
 from refract_pptx.presentation.chart_style import CHART_STYLE_OPERATIONS, chart_style_similarity
+from refract_pptx.presentation.smartart import similarity as smartart_similarity
 from refract_pptx.presentation.typography import TEXT_OPERATIONS, typography_similarity
 from refract_pptx.presentation.visual import visual_similarity
 
@@ -41,6 +42,7 @@ def _object_from_dict(value: dict[str, Any]) -> ObjectSnapshot:
         connector=dict(value.get("connector", {})),
         visual=dict(value.get("visual", {})),
         typography=dict(value.get("typography", {})),
+        smartart=dict(value.get("smartart", {})),
     )
 
 
@@ -331,6 +333,10 @@ def _component_similarity(
         return float(observed is not None)
     if observed is None:
         return 0.0
+    if component == "smartart_structure":
+        return smartart_similarity(observed.smartart, expected.smartart) * _box_similarity(
+            observed.bbox_points, expected.bbox_points, width, height
+        )
     if component in {"rotation", "flip", "picture_crop", "shape_preset", "line_style"}:
         identity = _media_similarity(observed, expected) if expected.kind == "picture" else 1.0
         if expected.text:
@@ -395,6 +401,8 @@ def _identity_weight(expected: ObjectSnapshot, candidate: ObjectSnapshot) -> flo
         scores.append(0.9 * _chart_data_similarity(candidate.chart, expected.chart))
     if expected.table and candidate.table:
         scores.append(0.9 * _table_content_similarity(candidate.table, expected.table))
+    if expected.smartart.get("supported") and candidate.smartart.get("supported"):
+        scores.append(0.95 * smartart_similarity(candidate.smartart, expected.smartart))
     if expected.connector and candidate.connector and expected.name == candidate.name:
         scores.append(0.88)
     return max(scores)
@@ -592,6 +600,8 @@ def _protected_similarity(
     score = _protected_similarity_base(observed, expected, width, height)
     if observed is None:
         return score
+    if expected.smartart.get("supported"):
+        score = min(score, smartart_similarity(observed.smartart, expected.smartart))
     if expected.visual:
         for component in ("rotation", "flip", "shape_preset", "line_style"):
             score = min(score, visual_similarity(component, observed.visual, expected.visual))

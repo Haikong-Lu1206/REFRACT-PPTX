@@ -105,6 +105,7 @@ def run_redteam(
     if not coverage["valid"]:
         issues.append("source object coverage invariant failed")
     single_repairs: list[dict[str, Any]] = []
+    smartart_variants: list[dict[str, Any]] = []
     temp_root = Path(work_directory).resolve() if work_directory else initial_path.parent
     temp_root.mkdir(parents=True, exist_ok=True)
     temp = temp_root / f".refract-redteam-{uuid4().hex}"
@@ -129,15 +130,31 @@ def run_redteam(
             }
             single_repairs.append(entry)
             if result.score <= 0:
-                issues.append(
-                    f"single repair has no positive reward: {mutation['mutation_id']}"
-                )
+                issues.append(f"single repair has no positive reward: {mutation['mutation_id']}")
             if not all(result.hard_gates.values()):
                 issues.append(
                     f"single repair triggers a catastrophic gate: {mutation['mutation_id']}"
                 )
 
         reorder_path = _reordered_candidate(source_path, temp / "reordered.pptx")
+        from refract_pptx.validation.smartart import variants
+
+        for mutation in mutations:
+            if not mutation.get("oracle_target", {}).get("smartart", {}).get("supported"):
+                continue
+            for name, path, equivalent in variants(source_path, mutation, temp):
+                result = evaluate_candidate(path, initial_path, plan)
+                valid = result.score >= 0.999999 if equivalent else result.score < 0.999999
+                smartart_variants.append(
+                    {
+                        "mutation_id": mutation["mutation_id"],
+                        "variant": name,
+                        "score": result.score,
+                        "valid": valid,
+                    }
+                )
+                if not valid:
+                    issues.append(f"SmartArt red-team failed: {mutation['mutation_id']}/{name}")
         reorder: dict[str, Any] = {"applicable": reorder_path is not None}
         if reorder_path is not None:
             result = evaluate_candidate(reorder_path, initial_path, plan)
@@ -169,6 +186,7 @@ def run_redteam(
         "issues": issues,
         "coverage": coverage,
         "single_repairs": single_repairs,
+        "smartart_variants": smartart_variants,
         "slide_reorder": reorder,
         "protected_damage": protected,
     }

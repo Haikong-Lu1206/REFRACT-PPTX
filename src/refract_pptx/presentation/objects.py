@@ -14,6 +14,7 @@ from PIL import Image, UnidentifiedImageError
 
 from refract_pptx.presentation.chart_style import chart_style_snapshot
 from refract_pptx.presentation.chart_workbook import workbook_consistency
+from refract_pptx.presentation.smartart import snapshot as smartart_snapshot
 from refract_pptx.presentation.typography import text_snapshot
 from refract_pptx.presentation.visual import visual_snapshot
 
@@ -448,6 +449,7 @@ class ObjectSnapshot:
     connector: dict[str, Any] = field(default_factory=dict)
     visual: dict[str, Any] = field(default_factory=dict)
     typography: dict[str, Any] = field(default_factory=dict)
+    smartart: dict[str, Any] = field(default_factory=dict)
 
     @property
     def semantic_key(self) -> str:
@@ -528,6 +530,7 @@ def object_snapshot_from_dict(value: dict[str, Any]) -> ObjectSnapshot:
         connector=dict(value.get("connector", {})),
         visual=dict(value.get("visual", {})),
         typography=dict(value.get("typography", {})),
+        smartart=dict(value.get("smartart", {})),
     )
 
 
@@ -616,6 +619,9 @@ def object_inventory(path: str | Path) -> DeckSnapshot:
                             connector=connector,
                             visual=visual_snapshot(shape),
                             typography=text_snapshot(shape),
+                            smartart=smartart_snapshot(package, slide_part, shape)
+                            if kind == "diagram"
+                            else {},
                         )
                     )
             semantic_keys = {(item.slide, item.shape_id): item.semantic_key for item in objects}

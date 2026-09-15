@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Three native SmartArt operations: replace/erase a node label, swap two labels, and change
+  explicit node RGB fill. Data and drawing-cache mutations are synchronized.
+- Ordered-tree correspondence, node cardinality, normalized geometry and visible-style scoring;
+  new IDs and split text runs are accepted. Unsupported models fail planning with a reason.
+- Per-target data-only/cache-only, duplicate-drawing and equivalent-ID red-team variants.
+- SmartArt snapshots are included in agent proposals, protected contracts and desktop runtimes.
+- This is bounded support, not arbitrary SmartArt layout regeneration or a WPS playback claim.
+
 ## 0.7.0
 
 - 15 new registered visual, typography, paragraph and chart-display mutations (33 total).

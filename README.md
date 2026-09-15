@@ -67,12 +67,15 @@ Alpha. Use the executable demo below to check the current implementation.
 ## Task families
 
 Run `refract capabilities` for the complete machine-readable operation catalog, arguments
-and scoring components. Version 0.7 includes **33 registered mutation operations**.
+and scoring components. The current source includes **36 registered mutation operations**.
 
 - **Reference reconstruction** repairs missing or damaged pictures, text, fills, and geometry
   using a rendered reference and supplied materials while preserving editability.
   Picture crop, rotation and flips are scored independently. Explicit text size, RGB color,
   emphasis, paragraph alignment, bullets and indentation can also be mutated and restored.
+  Bounded native SmartArt contracts add node-label replacement, label swaps and explicit node
+  fill changes. Semantic data and the drawing cache are checked together; see
+  [SmartArt support and limits](docs/smartart.md).
 - **Spatial structure repair** restores object geometry and z-order across selected slides,
   with native connector and arrow contracts. Rendered occlusion is not fully evaluated.
 - **Native chart repair** restores chart data and native chart semantics together with the

@@ -50,6 +50,7 @@ ALLOWED_SCORE_COMPONENTS = frozenset(
         "paragraph_indent",
         "text_color",
         "text_emphasis",
+        "smartart_structure",
     }
 )
 ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
@@ -71,6 +72,9 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
             "set_paragraph_indent",
             "set_text_color",
             "set_text_emphasis",
+            "set_smartart_text",
+            "swap_smartart_text",
+            "set_smartart_fill",
         }
     ),
     TaskFamily.SPATIAL_STRUCTURE_REPAIR: frozenset(
@@ -111,6 +115,9 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
 }
 
 OPERATION_SCORE_COMPONENTS: dict[str, frozenset[str]] = {
+    "set_smartart_text": frozenset({"smartart_structure"}),
+    "swap_smartart_text": frozenset({"smartart_structure"}),
+    "set_smartart_fill": frozenset({"smartart_structure"}),
     "set_rotation": frozenset({"rotation"}),
     "set_font_size": frozenset({"font_size"}),
     "set_paragraph_alignment": frozenset({"paragraph_alignment"}),

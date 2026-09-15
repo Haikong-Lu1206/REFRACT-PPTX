@@ -6,6 +6,8 @@ from typing import Any
 from refract_pptx.families import registered_families
 from refract_pptx.presentation import DeckSnapshot, ObjectSnapshot
 from refract_pptx.presentation.chart_style import CHART_STYLE_OPERATIONS, validate_chart_style
+from refract_pptx.presentation.smartart import OPERATIONS as SMARTART_OPERATIONS
+from refract_pptx.presentation.smartart import validate as validate_smartart
 from refract_pptx.presentation.typography import TEXT_OPERATIONS, validate_text
 from refract_pptx.presentation.visual_mutation import VISUAL_OPERATIONS, validate_visual
 
@@ -124,6 +126,22 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
             )
         operation = dict(mutation.operation)
         operation_type = operation.get("type")
+        if operation_type in SMARTART_OPERATIONS:
+            try:
+                validate_smartart(operation, target.smartart)
+                parts = {target.smartart["data_part"], target.smartart["drawing_part"]}
+                if any(
+                    item is not target
+                    and parts.intersection(
+                        {item.smartart.get("data_part"), item.smartart.get("drawing_part")}
+                    )
+                    for item in inventory.objects
+                ):
+                    raise ValueError(
+                        "shared SmartArt parts require an explicit multi-object contract"
+                    )
+            except ValueError as exc:
+                raise ProposalError(f"mutation {mutation.mutation_id}: {exc}") from exc
         if operation_type == "set_chart_value" and target.chart.get("workbook_state") not in {
             "absent",
             "consistent",

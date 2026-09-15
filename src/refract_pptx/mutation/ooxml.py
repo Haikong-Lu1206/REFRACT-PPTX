@@ -19,6 +19,8 @@ from refract_pptx.presentation.objects import (
     PKG_REL_NS,
     R_NS,
 )
+from refract_pptx.presentation.smartart import OPERATIONS as SMARTART_OPERATIONS
+from refract_pptx.presentation.smartart import apply as apply_smartart
 from refract_pptx.presentation.typography import TEXT_OPERATIONS, apply_text
 from refract_pptx.presentation.visual import visual_snapshot
 from refract_pptx.presentation.visual_mutation import (
@@ -508,7 +510,9 @@ def apply_mutations(
         target, parent = _find_shape(slide_root, int(mutation["target_shape_id"]))
         operation = dict(mutation["operation"])
         operation_type = str(operation.get("type", ""))
-        if operation_type in TEXT_OPERATIONS:
+        if operation_type in SMARTART_OPERATIONS:
+            apply_smartart(editor, target, operation, mutation["oracle_target"]["smartart"])
+        elif operation_type in TEXT_OPERATIONS:
             apply_text(target, operation)
         elif operation_type in CHART_STYLE_OPERATIONS:
             chart_part, chart_root = _chart_root(editor, slide_part, target)

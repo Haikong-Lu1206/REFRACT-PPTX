@@ -40,6 +40,7 @@ _RUNTIME_FILES = (
     "presentation/chart_style.py",
     "presentation/chart_workbook.py",
     "presentation/typography.py",
+    "presentation/smartart.py",
     "evaluation/__init__.py",
     "evaluation/progress.py",
 )

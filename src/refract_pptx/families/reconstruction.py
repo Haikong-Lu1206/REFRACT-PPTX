@@ -16,6 +16,7 @@ class ReferenceReconstruction(FamilyPlugin):
             "text_reconstruction",
             "table_reconstruction",
             "mixed_slide_reconstruction",
+            "smartart_semantic_repair",
         }
     )
 
@@ -30,6 +31,8 @@ class ReferenceReconstruction(FamilyPlugin):
             capabilities.append("picture_restoration")
         if "table" in object_types:
             capabilities.append("table_reconstruction")
+        if "diagram" in object_types:
+            capabilities.append("smartart_semantic_repair")
         if len(capabilities) >= 2:
             capabilities.append("mixed_slide_reconstruction")
         return CapabilityCandidate(
