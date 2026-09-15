@@ -14,6 +14,7 @@ class SpatialStructureRepair(FamilyPlugin):
             "overlap_repair",
             "connector_alignment",
             "cross_slide_consistency",
+            "visible_shape_style_repair",
         }
     )
 
@@ -41,4 +42,3 @@ class SpatialStructureRepair(FamilyPlugin):
             ),
             suggested_capabilities=tuple(capabilities),
         )
-

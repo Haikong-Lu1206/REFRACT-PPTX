@@ -37,6 +37,28 @@ Geometry swaps include both targets in the same assignment and score both ends.
   arrowheads, line preset, width, and color. Endpoint identity is resolved through the attached
   objects' semantic keys rather than fixed shape IDs.
 
+## Additional visible contracts (plan 1.1)
+
+- `rotation`: shortest circular angle difference; full credit within 1 degree, zero at 20 degrees.
+- `flip`: horizontal and vertical states must both match.
+- `picture_crop`: maximum crop-edge error; full within 0.5 percentage points, zero at 15 points.
+  Picture transform scores are multiplied by media identity similarity.
+- `shape_preset`: native preset equality. `line_style`: mean of visible state, dash, RGB and
+  width similarities; width is full within 0.25pt and zero at 3pt error. RGB uses maximum-channel
+  error, full within 8 and zero at 64; this is not a perceptual color metric.
+- `font_size`: character-weighted similarity, full within max(0.75pt, 3%), zero at max(4pt, 30%).
+  `text_color` uses the RGB tolerance above; `text_emphasis` checks known bold/italic/underline.
+  Text must remain identical for these formatting components; run segmentation may change.
+- `paragraph_alignment`, `paragraph_bullet`: equality of known explicit paragraph properties.
+  Bullet font is omitted. `paragraph_indent`: margin/indent full within 1.5pt, zero at 18pt.
+- `chart_direction`, `chart_grouping`, `chart_legend_position`, `chart_markers`: native display
+  properties conditioned on chart-data similarity. Verified embedded workbook/cache consistency
+  is an episode-local requirement; cache-only repairs cannot receive chart credit.
+
+These are component similarities **before Init normalization**. A smaller residual error only
+receives partial progress when it improves on the actual initial state. The thresholds are
+documented implementation choices, not measured GUI accuracy guarantees.
+
 ## Preservation and gates
 
 Every untargeted top-level visible object becomes a protected contract. Text, fill, geometry,

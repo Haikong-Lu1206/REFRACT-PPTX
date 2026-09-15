@@ -72,4 +72,3 @@ def render_report(input_path: str | Path, output_path: str | Path) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(document, encoding="utf-8")
     return target
-

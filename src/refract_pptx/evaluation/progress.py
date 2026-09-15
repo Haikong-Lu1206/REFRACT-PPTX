@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from refract_pptx.presentation import DeckSnapshot, ObjectSnapshot, object_inventory
+from refract_pptx.presentation.chart_style import CHART_STYLE_OPERATIONS, chart_style_similarity
+from refract_pptx.presentation.typography import TEXT_OPERATIONS, typography_similarity
+from refract_pptx.presentation.visual import visual_similarity
 
 
 def _clamp(value: float) -> float:
@@ -36,6 +39,8 @@ def _object_from_dict(value: dict[str, Any]) -> ObjectSnapshot:
         chart=dict(value.get("chart", {})),
         table=dict(value.get("table", {})),
         connector=dict(value.get("connector", {})),
+        visual=dict(value.get("visual", {})),
+        typography=dict(value.get("typography", {})),
     )
 
 
@@ -326,6 +331,11 @@ def _component_similarity(
         return float(observed is not None)
     if observed is None:
         return 0.0
+    if component in {"rotation", "flip", "picture_crop", "shape_preset", "line_style"}:
+        identity = _media_similarity(observed, expected) if expected.kind == "picture" else 1.0
+        if expected.text:
+            identity *= _text_similarity(observed.text, expected.text)
+        return identity * visual_similarity(component, observed.visual, expected.visual)
     if component == "geometry":
         return _box_similarity(observed.bbox_points, expected.bbox_points, width, height)
     if component == "text":
@@ -338,6 +348,12 @@ def _component_similarity(
         return _clamp(1.0 - abs(observed.z_order - expected.z_order) / 5)
     if component == "chart_type":
         return float(observed.chart.get("plot") == expected.chart.get("plot"))
+    if component in CHART_STYLE_OPERATIONS.values():
+        return chart_style_similarity(
+            component, observed.chart, expected.chart
+        ) * _chart_data_similarity(observed.chart, expected.chart)
+    if component in TEXT_OPERATIONS.values():
+        return typography_similarity(component, observed.typography, expected.typography)
     if component == "chart_data":
         return _chart_data_similarity(observed.chart, expected.chart)
     if component == "chart_elements":
@@ -531,7 +547,7 @@ def _coverage_check(
     return multiplier, hard_pass, violations
 
 
-def _protected_similarity(
+def _protected_similarity_base(
     observed: ObjectSnapshot | None,
     expected: ObjectSnapshot,
     width: float,
@@ -567,6 +583,39 @@ def _protected_similarity(
     return 0.65 * semantics + 0.35 * geometry
 
 
+def _protected_similarity(
+    observed: ObjectSnapshot | None,
+    expected: ObjectSnapshot,
+    width: float,
+    height: float,
+) -> float:
+    score = _protected_similarity_base(observed, expected, width, height)
+    if observed is None:
+        return score
+    if expected.visual:
+        for component in ("rotation", "flip", "shape_preset", "line_style"):
+            score = min(score, visual_similarity(component, observed.visual, expected.visual))
+        if expected.kind == "picture":
+            score = min(score, visual_similarity("picture_crop", observed.visual, expected.visual))
+    if expected.typography:
+        fields = {
+            "font_size": ("size",),
+            "text_color": ("color",),
+            "text_emphasis": ("bold", "italic", "underline"),
+        }
+        for component, keys in fields.items():
+            if any(
+                span.get(key) is not None
+                for span in expected.typography.get("spans", [])
+                for key in keys
+            ):
+                score = min(
+                    score,
+                    typography_similarity(component, observed.typography, expected.typography),
+                )
+    return score
+
+
 def evaluate_snapshots(
     candidate: DeckSnapshot,
     initial: DeckSnapshot,
@@ -583,7 +632,11 @@ def evaluate_snapshots(
             group.append(len(expected_targets))
             expected_targets.append(_object_from_dict(other))
         target_groups.append(group)
-    candidate_matches, candidate_identity = _assign(expected_targets, candidate.objects)
+    protected = [_object_from_dict(item) for item in payload.get("protected_objects", [])]
+    all_expected = expected_targets + protected
+    all_matches, all_weights = _assign(all_expected, candidate.objects)
+    candidate_matches = all_matches[: len(expected_targets)]
+    candidate_identity = all_weights[: len(expected_targets)]
     initial_matches, _ = _assign(expected_targets, initial.objects)
     component_results: list[dict[str, Any]] = []
     total_weight = 0.0
@@ -625,6 +678,12 @@ def evaluate_snapshots(
         mutation_progress = sum(
             component_scores[name] * float(weight) for name, weight in mutation["scoring"].items()
         )
+        # Native chart caches and the editable workbook must agree. This is an
+        # episode-local constraint, activated only by a verified source contract.
+        if expected_group[0].chart.get("workbook_state") == "consistent":
+            candidate_chart = candidate_group[0].chart if candidate_group[0] else {}
+            if candidate_chart.get("workbook_state") != "consistent":
+                mutation_progress = 0.0
         mutation_weight = float(mutation["weight"])
         weighted_progress += mutation_progress * mutation_weight
         total_weight += mutation_weight
@@ -644,8 +703,7 @@ def evaluate_snapshots(
         )
     raw_progress = weighted_progress / max(total_weight, 1e-9)
 
-    protected = [_object_from_dict(item) for item in payload.get("protected_objects", [])]
-    protected_matches, _ = _assign(protected, candidate.objects)
+    protected_matches = all_matches[len(expected_targets) :]
     protected_loss = 0.0
     protected_details = []
     for expected, observed in zip(protected, protected_matches, strict=True):
@@ -669,8 +727,6 @@ def evaluate_snapshots(
     excess = max(0, len(candidate.objects) - expected_total)
     preservation_multiplier = _clamp(1.0 - min(0.7, protected_loss) - min(0.3, 0.04 * excess))
 
-    all_expected = expected_targets + protected
-    all_matches, all_weights = _assign(all_expected, candidate.objects)
     coverage_multiplier, coverage_hard_pass, coverage_violations = _coverage_check(
         candidate, all_expected, all_matches, all_weights
     )

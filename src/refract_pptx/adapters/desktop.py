@@ -35,6 +35,11 @@ _RUNTIME_FILES = (
     "presentation/__init__.py",
     "presentation/inventory.py",
     "presentation/objects.py",
+    "presentation/visual.py",
+    "presentation/visual_mutation.py",
+    "presentation/chart_style.py",
+    "presentation/chart_workbook.py",
+    "presentation/typography.py",
     "evaluation/__init__.py",
     "evaluation/progress.py",
 )
@@ -89,9 +94,7 @@ def _runtime_archive(target: Path) -> None:
             source = package_root / relative
             if not source.is_file():
                 raise AdapterError(f"runtime source is missing: {source}")
-            payload = source.read_text(encoding="utf-8").replace(
-                "refract_pptx", "_refract_runtime"
-            )
+            payload = source.read_text(encoding="utf-8").replace("refract_pptx", "_refract_runtime")
             info = zipfile.ZipInfo(f"_refract_runtime/{relative}")
             info.date_time = (1980, 1, 1, 0, 0, 0)
             info.compress_type = zipfile.ZIP_DEFLATED
@@ -682,9 +685,7 @@ class DesktopBaseTaskAdapter:
                 profile=profile.to_dict(),
             )
             _write_json(manifest_path, package.to_dict())
-            package = EmittedPackage(
-                **{**asdict(package), "files": tuple(records)}
-            )
+            package = EmittedPackage(**{**asdict(package), "files": tuple(records)})
             issues = validate_emitted_package(staging)
             if issues:
                 raise AdapterError("deployment package validation failed: " + "; ".join(issues))

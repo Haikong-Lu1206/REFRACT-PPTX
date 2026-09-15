@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0
+
+- 15 new registered visual, typography, paragraph and chart-display mutations (33 total).
+- Character-aligned formatting evaluation accepts equivalent split runs and new object IDs.
+- Embedded chart value mutations synchronize supported XLSX cells and chart caches; cache-only
+  repairs fail the affected chart episode rather than the whole task.
+- Target and protected objects share one assignment; explicit visual/style collateral damage
+  receives graded penalties. New compiled plans use version 1.1.
+- `refract capabilities` and complete operation arguments in the design-agent prompt.
+- Additional equivalence, partial-repair, invalid-input and adversarial regressions;
+  standalone desktop runtime includes all new evaluator dependencies.
+- Existing task bundles are not rewritten. Rebuild and revalidate to adopt the new contracts.
+
 ## 0.6.2
 
 - Public Alpha documentation with a clear installation, authoring and deployment path.

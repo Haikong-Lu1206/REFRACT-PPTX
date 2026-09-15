@@ -95,4 +95,3 @@ def validate_bundle(path: str | Path) -> BundleValidation:
         issues=tuple(issues),
         checks=checks,
     )
-

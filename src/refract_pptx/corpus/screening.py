@@ -79,4 +79,3 @@ def screen_inventory(
 
 def screen_presentation(path: str | Path, **kwargs: Any) -> ScreeningDecision:
     return screen_inventory(inspect_pptx(path), **kwargs)
-

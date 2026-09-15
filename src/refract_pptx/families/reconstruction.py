@@ -10,6 +10,9 @@ class ReferenceReconstruction(FamilyPlugin):
     supported_capabilities = frozenset(
         {
             "picture_restoration",
+            "picture_transform_repair",
+            "visible_shape_style_repair",
+            "text_style_repair",
             "text_reconstruction",
             "table_reconstruction",
             "mixed_slide_reconstruction",

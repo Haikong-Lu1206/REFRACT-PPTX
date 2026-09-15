@@ -12,6 +12,11 @@ from xml.etree import ElementTree as ET
 
 from PIL import Image, UnidentifiedImageError
 
+from refract_pptx.presentation.chart_style import chart_style_snapshot
+from refract_pptx.presentation.chart_workbook import workbook_consistency
+from refract_pptx.presentation.typography import text_snapshot
+from refract_pptx.presentation.visual import visual_snapshot
+
 P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 C_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart"
@@ -377,6 +382,19 @@ def _chart_snapshot(package: zipfile.ZipFile, chart_part: str) -> dict[str, Any]
     if not chart_part or chart_part not in package.namelist():
         return {}
     root = _parse(package, chart_part)
+    external = root.find(f"{{{C_NS}}}externalData")
+    workbook_state = "absent"
+    if external is not None:
+        reference = _relationships(package, chart_part).get(external.get(f"{{{R_NS}}}id", ""), {})
+        workbook_part = reference.get("target", "")
+        try:
+            workbook_state = (
+                "consistent"
+                if workbook_consistency(package.read(workbook_part), root)
+                else "inconsistent"
+            )
+        except (ValueError, KeyError, IndexError, ET.ParseError, zipfile.BadZipFile):
+            workbook_state = "unsupported"
     plot_area = next((node for node in root.iter() if _local(node.tag) == "plotArea"), None)
     plot = ""
     if plot_area is not None:
@@ -402,6 +420,8 @@ def _chart_snapshot(package: zipfile.ZipFile, chart_part: str) -> dict[str, Any]
         )
     return {
         "part": chart_part,
+        "display": chart_style_snapshot(root),
+        "workbook_state": workbook_state,
         "plot": plot,
         "title": title_text,
         "legend": any(_local(node.tag) == "legend" for node in root.iter()),
@@ -426,6 +446,8 @@ class ObjectSnapshot:
     chart: dict[str, Any] = field(default_factory=dict)
     table: dict[str, Any] = field(default_factory=dict)
     connector: dict[str, Any] = field(default_factory=dict)
+    visual: dict[str, Any] = field(default_factory=dict)
+    typography: dict[str, Any] = field(default_factory=dict)
 
     @property
     def semantic_key(self) -> str:
@@ -504,6 +526,8 @@ def object_snapshot_from_dict(value: dict[str, Any]) -> ObjectSnapshot:
         chart=dict(value.get("chart", {})),
         table=dict(value.get("table", {})),
         connector=dict(value.get("connector", {})),
+        visual=dict(value.get("visual", {})),
+        typography=dict(value.get("typography", {})),
     )
 
 
@@ -590,6 +614,8 @@ def object_inventory(path: str | Path) -> DeckSnapshot:
                             chart=chart,
                             table=table,
                             connector=connector,
+                            visual=visual_snapshot(shape),
+                            typography=text_snapshot(shape),
                         )
                     )
             semantic_keys = {(item.slide, item.shape_id): item.semantic_key for item in objects}

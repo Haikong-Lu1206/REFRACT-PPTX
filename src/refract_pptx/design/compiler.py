@@ -5,6 +5,9 @@ from typing import Any
 
 from refract_pptx.families import registered_families
 from refract_pptx.presentation import DeckSnapshot, ObjectSnapshot
+from refract_pptx.presentation.chart_style import CHART_STYLE_OPERATIONS, validate_chart_style
+from refract_pptx.presentation.typography import TEXT_OPERATIONS, validate_text
+from refract_pptx.presentation.visual_mutation import VISUAL_OPERATIONS, validate_visual
 
 from .proposal import AgentProposal, MutationProposal, ProposalError
 
@@ -121,6 +124,29 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
             )
         operation = dict(mutation.operation)
         operation_type = operation.get("type")
+        if operation_type == "set_chart_value" and target.chart.get("workbook_state") not in {
+            "absent",
+            "consistent",
+        }:
+            raise ProposalError(
+                "Chart data mutation requires a readable, consistent embedded workbook "
+                "or literal data"
+            )
+        if operation_type in TEXT_OPERATIONS:
+            try:
+                validate_text(operation, target.typography)
+            except ValueError as exc:
+                raise ProposalError(f"mutation {mutation.mutation_id}: {exc}") from exc
+        if operation_type in CHART_STYLE_OPERATIONS:
+            try:
+                validate_chart_style(operation, target.chart)
+            except ValueError as exc:
+                raise ProposalError(f"mutation {mutation.mutation_id}: {exc}") from exc
+        if operation_type in VISUAL_OPERATIONS:
+            try:
+                validate_visual(operation, target.kind, target.visual)
+            except ValueError as exc:
+                raise ProposalError(f"mutation {mutation.mutation_id}: {exc}") from exc
         if operation_type == "remove_shape" and target.kind not in {"shape", "picture", "table"}:
             raise ProposalError(
                 f"mutation {mutation.mutation_id}: removing native {target.kind} objects is not "
@@ -138,11 +164,15 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
             raise ProposalError(
                 f"mutation {mutation.mutation_id}: table operations require a native table"
             )
-        if operation_type in {
-            "reverse_connector",
-            "detach_connector_endpoint",
-            "set_connector_arrowhead",
-        } and target.kind != "connector":
+        if (
+            operation_type
+            in {
+                "reverse_connector",
+                "detach_connector_endpoint",
+                "set_connector_arrowhead",
+            }
+            and target.kind != "connector"
+        ):
             raise ProposalError(
                 f"mutation {mutation.mutation_id}: connector operations require a connector"
             )
@@ -185,12 +215,10 @@ def compile_proposal(proposal: AgentProposal, inventory: DeckSnapshot) -> Compil
             )
         )
     protected = tuple(
-        item.to_dict()
-        for item in inventory.objects
-        if (item.slide, item.shape_id) not in targeted
+        item.to_dict() for item in inventory.objects if (item.slide, item.shape_id) not in targeted
     )
     return CompiledPlan(
-        plan_version="1.0",
+        plan_version="1.1",
         title=proposal.title,
         instruction=proposal.instruction,
         deck_summary=proposal.deck_summary,

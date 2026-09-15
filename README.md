@@ -66,12 +66,18 @@ Alpha. Use the executable demo below to check the current implementation.
 
 ## Task families
 
+Run `refract capabilities` for the complete machine-readable operation catalog, arguments
+and scoring components. Version 0.7 includes **33 registered mutation operations**.
+
 - **Reference reconstruction** repairs missing or damaged pictures, text, fills, and geometry
   using a rendered reference and supplied materials while preserving editability.
+  Picture crop, rotation and flips are scored independently. Explicit text size, RGB color,
+  emphasis, paragraph alignment, bullets and indentation can also be mutated and restored.
 - **Spatial structure repair** restores object geometry and z-order across selected slides,
   with native connector and arrow contracts. Rendered occlusion is not fully evaluated.
 - **Native chart repair** restores chart data and native chart semantics together with the
-  surrounding layout.
+  surrounding layout, bar direction, grouping, legend position and line/scatter markers.
+  Supported embedded workbook values are updated together with their chart caches.
 - **Native table repair** restores cell content and fill plus editable row and column
   proportions.
 - **Connector repair** is part of spatial repair and checks attached object semantics,
@@ -286,7 +292,9 @@ should be excluded unless separate permission has been obtained.
 - geometry has a full-credit region and continuous falloff rather than exact-coordinate cliffs;
 - target matching is maximum-weight one-to-one assignment, including both ends of a swap;
 - picture identity uses SHA-256 as a fast path and a 12x12 visual signature after re-encoding;
-- native charts support cached values, title/legend presence, and series-color scoring;
+- native charts support data, title/legend presence, series colors and registered display properties;
+- supported embedded workbook/cache disagreement prevents credit for that chart episode;
+- text formatting follows character content rather than run boundaries, without exact font-family checks;
 - native tables expose structure, cell content, visible cell style, and relative row/column
   proportions;
 - connectors expose semantic start/end targets, connection sites, arrowheads, line style, and
@@ -300,7 +308,7 @@ See [Evaluation](docs/evaluation.md) for the exact current contract.
 
 ## Supported scope
 
-Version 0.6 supports the registered operations listed above. Real WPS end-to-end compatibility
+Version 0.7 supports the registered operations listed above. Real WPS end-to-end compatibility
 has not been established for this release. Validate the saved output in your target environment;
 the Python test suite uses synthetic fixtures.
 
@@ -310,6 +318,8 @@ transitions, and an office-specific automation driver are not yet registered mut
 Real-office evidence can already be recorded and enforced after an external WPS or LibreOffice
 save/reopen run. Unsupported native families are not advertised to the design agent and cannot
 pass the production gate. See [compatibility](docs/compatibility.md) for acceptance steps.
+The [capability matrix](docs/capabilities.md) distinguishes implemented migrations from
+remaining native-object and editor-integration work.
 
 ## Installation and releases
 

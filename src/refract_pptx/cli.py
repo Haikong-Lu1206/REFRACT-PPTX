@@ -54,6 +54,31 @@ def _write_json(value: Any, path: str | None = None) -> None:
         print(text)
 
 
+def _capabilities(args: argparse.Namespace) -> int:
+    from refract_pptx.design.catalog import OPERATION_ARGUMENTS
+    from refract_pptx.design.proposal import ALLOWED_OPERATIONS, OPERATION_SCORE_COMPONENTS
+
+    _write_json(
+        {
+            "version": __version__,
+            "plan_version": "1.1",
+            "families": {
+                family.value: sorted(operations)
+                for family, operations in ALLOWED_OPERATIONS.items()
+            },
+            "operations": {
+                name: {
+                    "arguments": arguments,
+                    "score_components": sorted(OPERATION_SCORE_COMPONENTS.get(name, [])),
+                }
+                for name, arguments in OPERATION_ARGUMENTS.items()
+            },
+        },
+        args.output,
+    )
+    return 0
+
+
 def _write_jsonl(records: Iterable[dict[str, Any]], path: str) -> int:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -444,6 +469,12 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--office-executable")
     render.add_argument("--timeout", type=int, default=120)
     render.set_defaults(handler=_render_pdf)
+
+    catalog = commands.add_parser(
+        "capabilities", help="list implemented operations and scoring contracts"
+    )
+    catalog.add_argument("--output")
+    catalog.set_defaults(handler=_capabilities)
 
     doctor = commands.add_parser("doctor", help="check the local runtime")
     doctor.set_defaults(handler=_doctor)

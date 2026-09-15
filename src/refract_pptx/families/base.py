@@ -30,4 +30,3 @@ class FamilyPlugin(ABC):
         if episode.capability not in self.supported_capabilities:
             issues.append(f"unsupported capability: {episode.capability}")
         return issues
-

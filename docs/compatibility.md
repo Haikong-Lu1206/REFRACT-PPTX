@@ -32,8 +32,9 @@ investigation; do not loosen the policy solely to obtain a passing release.
 
 ## Scoring limitations
 
-Picture signatures are not proof of asset provenance. Chart workbook/cache synchronization,
-theme resolution, recursive groups and exact rendered occlusion are not fully covered.
-SmartArt, formulas, animations, Morph and detailed typography need additional contracts before
+Picture signatures are not proof of asset provenance. Chart workbook/cache synchronization is
+supported for readable embedded workbooks with simple single-column, non-formula cell ranges.
+External data, formula calculations, theme resolution, recursive groups and exact rendered
+occlusion are not fully covered. SmartArt, formulas, animations, Morph and inherited typography need additional contracts before
 they can be advertised as evaluated capabilities. Current reference and preservation rules
 should not be interpreted as a full rendering-equivalence test.

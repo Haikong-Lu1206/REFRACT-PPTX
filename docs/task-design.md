@@ -69,8 +69,9 @@ evaluators for individual source decks.
 
 ## What this release does not yet establish
 
-Recursive group topology, SmartArt, equations, animation timing, Morph, chart workbook/cache
-consistency, and detailed text/bullet styling do not have complete scoring contracts here.
+Recursive group topology, SmartArt, equations, animation timing and Morph do not have complete
+scoring contracts here. Explicit run/paragraph styles and simple embedded chart workbook ranges
+are supported; inherited/theme typography and formula-backed workbook calculations are not.
 Image identity still uses a coarse signature fallback; it does not prove asset provenance or
 defeat all PDF-crop attacks. Theme colors and all editor-specific visual equivalents are not
 fully normalized. Z-order scoring is not a complete rendered occlusion check.
@@ -78,6 +79,8 @@ fully normalized. Z-order scoring is not a complete rendered occlusion check.
 Do not advertise those capabilities as covered just because a deck contains them. The inventory
 coverage invariant covers inventoried top-level objects, not every child or non-shape part.
 Choose supported tasks for initial deployment and retain review plus real-editor canaries.
+See [the capability matrix and additional operations](capabilities.md). The authoring prompt
+includes the full argument catalog; use `refract capabilities` to inspect it independently.
 
 ## Trainable progress and operational failures
 

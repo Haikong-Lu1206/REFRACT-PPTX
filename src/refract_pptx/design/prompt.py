@@ -6,6 +6,7 @@ from typing import Any, Protocol
 from refract_pptx.families import registered_families
 from refract_pptx.presentation import DeckSnapshot
 
+from .catalog import OPERATION_ARGUMENTS
 from .proposal import (
     ALLOWED_OPERATIONS,
     ALLOWED_SCORE_COMPONENTS,
@@ -44,6 +45,8 @@ def proposal_prompt(inventory: DeckSnapshot, evidence_context: tuple[str, ...] =
             "table": item.table,
             "chart": item.chart,
             "connector": item.connector,
+            "visual": item.visual,
+            "typography": item.typography,
         }
         for item in inventory.objects
     ]
@@ -103,6 +106,8 @@ def proposal_prompt(inventory: DeckSnapshot, evidence_context: tuple[str, ...] =
         + json.dumps(schema, indent=2, ensure_ascii=False)
         + "\n\nOPERATION CATALOG\n"
         + json.dumps(operation_catalog, indent=2, ensure_ascii=False)
+        + "\n\nOPERATION ARGUMENTS (in addition to type)\n"
+        + json.dumps(OPERATION_ARGUMENTS, indent=2, ensure_ascii=False)
         + "\n\nCAPABILITY CATALOG\n"
         + json.dumps(capability_catalog, indent=2, ensure_ascii=False)
         + "\n\nSCORING COMPONENTS\n"

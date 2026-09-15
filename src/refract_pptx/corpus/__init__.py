@@ -7,4 +7,3 @@ __all__ = [
     "discover_local",
     "screen_presentation",
 ]
-

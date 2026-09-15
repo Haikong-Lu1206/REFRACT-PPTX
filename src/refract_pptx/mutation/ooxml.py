@@ -9,6 +9,8 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 from refract_pptx.design.compiler import CompiledPlan
+from refract_pptx.presentation.chart_style import CHART_STYLE_OPERATIONS, apply_chart_style
+from refract_pptx.presentation.chart_workbook import update_workbook_value
 from refract_pptx.presentation.objects import (
     A_NS,
     C_NS,
@@ -16,6 +18,14 @@ from refract_pptx.presentation.objects import (
     P_NS,
     PKG_REL_NS,
     R_NS,
+)
+from refract_pptx.presentation.typography import TEXT_OPERATIONS, apply_text
+from refract_pptx.presentation.visual import visual_snapshot
+from refract_pptx.presentation.visual_mutation import (
+    VISUAL_OPERATIONS,
+    apply_visual,
+    number,
+    validate_visual,
 )
 
 
@@ -76,9 +86,7 @@ class PackageEditor:
             if node.attrib.get("Id") != relationship_id:
                 continue
             target = node.attrib.get("Target", "")
-            resolved = posixpath.normpath(
-                posixpath.join(posixpath.dirname(source_part), target)
-            )
+            resolved = posixpath.normpath(posixpath.join(posixpath.dirname(source_part), target))
             root.remove(node)
             return resolved
         return ""
@@ -244,9 +252,7 @@ def _set_text(shape: ET.Element, operation: dict[str, Any]) -> None:
 
 
 def _shape_properties(shape: ET.Element) -> ET.Element:
-    properties = next(
-        (node for node in shape if _local(node.tag) in {"spPr", "grpSpPr"}), None
-    )
+    properties = next((node for node in shape if _local(node.tag) in {"spPr", "grpSpPr"}), None)
     if properties is None:
         properties = ET.SubElement(shape, f"{{{P_NS}}}spPr")
     return properties
@@ -436,10 +442,17 @@ def _set_series_color(chart_root: ET.Element, operation: dict[str, Any]) -> None
     ET.SubElement(solid, f"{{{A_NS}}}srgbClr", {"val": rgb})
 
 
-def _set_chart_value(chart_root: ET.Element, operation: dict[str, Any]) -> None:
+def _set_chart_value(
+    chart_root: ET.Element, operation: dict[str, Any], editor: PackageEditor, chart_part: str
+) -> None:
     series = _chart_series(chart_root, int(operation.get("series_index", -1)))
     point_index = int(operation.get("point_index", -1))
-    caches = [node for node in series.iter() if _local(node.tag) in {"numCache", "numLit"}]
+    parent = series.find(f"{{{C_NS}}}val")
+    if parent is None:
+        parent = series.find(f"{{{C_NS}}}yVal")
+    if parent is None:
+        raise MutationError("Chart series has no supported value axis")
+    caches = [node for node in parent.iter() if _local(node.tag) in {"numCache", "numLit"}]
     if not caches:
         raise MutationError("chart series has no numeric cache")
     point = next(
@@ -455,7 +468,23 @@ def _set_chart_value(chart_root: ET.Element, operation: dict[str, Any]) -> None:
     value = next((node for node in point if _local(node.tag) == "v"), None)
     if value is None:
         raise MutationError("chart point has no value node")
-    value.text = str(operation.get("value", ""))
+    number(operation.get("value"), -1e100, 1e100, "chart value")
+    new_value = str(operation["value"])
+    formula = parent.findtext(f".//{{{C_NS}}}f", "")
+    if formula:
+        external = chart_root.find(f"{{{C_NS}}}externalData")
+        if external is None:
+            raise MutationError("Formula-backed chart requires an embedded workbook")
+        part = editor.relationships(chart_part).get(external.get(f"{{{R_NS}}}id", ""), "")
+        if not part:
+            raise MutationError("Missing embedded chart workbook")
+        try:
+            editor.parts[part] = update_workbook_value(
+                editor.parts[part], formula, point_index, new_value
+            )
+        except ValueError as exc:
+            raise MutationError(str(exc)) from exc
+    value.text = new_value
 
 
 def _plan_dict(plan: CompiledPlan | dict[str, Any]) -> dict[str, Any]:
@@ -479,7 +508,20 @@ def apply_mutations(
         target, parent = _find_shape(slide_root, int(mutation["target_shape_id"]))
         operation = dict(mutation["operation"])
         operation_type = str(operation.get("type", ""))
-        if operation_type == "move_shape":
+        if operation_type in TEXT_OPERATIONS:
+            apply_text(target, operation)
+        elif operation_type in CHART_STYLE_OPERATIONS:
+            chart_part, chart_root = _chart_root(editor, slide_part, target)
+            apply_chart_style(chart_root, operation)
+        elif operation_type in VISUAL_OPERATIONS:
+            try:
+                from refract_pptx.presentation.objects import _shape_kind
+
+                validate_visual(operation, _shape_kind(target), visual_snapshot(target))
+                apply_visual(target, operation)
+            except ValueError as exc:
+                raise MutationError(str(exc)) from exc
+        elif operation_type == "move_shape":
             _move(target, operation)
         elif operation_type == "resize_shape":
             _resize(target, operation)
@@ -523,7 +565,7 @@ def apply_mutations(
             "set_series_color",
             "set_chart_value",
         }:
-            _, chart_root = _chart_root(editor, slide_part, target)
+            chart_part, chart_root = _chart_root(editor, slide_part, target)
             if operation_type == "remove_chart_legend":
                 _remove_chart_element(chart_root, "legend")
             elif operation_type == "remove_chart_title":
@@ -531,7 +573,7 @@ def apply_mutations(
             elif operation_type == "set_series_color":
                 _set_series_color(chart_root, operation)
             else:
-                _set_chart_value(chart_root, operation)
+                _set_chart_value(chart_root, operation, editor, chart_part)
         else:
             raise MutationError(f"unsupported compiled operation: {operation_type}")
     return editor.write(output)

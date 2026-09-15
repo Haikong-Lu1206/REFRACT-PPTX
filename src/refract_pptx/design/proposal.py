@@ -35,11 +35,43 @@ ALLOWED_SCORE_COMPONENTS = frozenset(
         "table_proportions",
         "connector_targets",
         "connector_style",
+        "rotation",
+        "flip",
+        "picture_crop",
+        "shape_preset",
+        "line_style",
+        "chart_direction",
+        "chart_grouping",
+        "chart_legend_position",
+        "chart_markers",
+        "font_size",
+        "paragraph_alignment",
+        "paragraph_bullet",
+        "paragraph_indent",
+        "text_color",
+        "text_emphasis",
     }
 )
 ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
     TaskFamily.REFERENCE_RECONSTRUCTION: frozenset(
-        {"remove_shape", "move_shape", "resize_shape", "set_text", "set_fill"}
+        {
+            "remove_shape",
+            "move_shape",
+            "resize_shape",
+            "set_text",
+            "set_fill",
+            "set_rotation",
+            "set_flip",
+            "set_picture_crop",
+            "set_shape_preset",
+            "set_line_style",
+            "set_font_size",
+            "set_paragraph_alignment",
+            "set_paragraph_bullet",
+            "set_paragraph_indent",
+            "set_text_color",
+            "set_text_emphasis",
+        }
     ),
     TaskFamily.SPATIAL_STRUCTURE_REPAIR: frozenset(
         {
@@ -50,6 +82,10 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
             "reverse_connector",
             "detach_connector_endpoint",
             "set_connector_arrowhead",
+            "set_rotation",
+            "set_flip",
+            "set_shape_preset",
+            "set_line_style",
         }
     ),
     TaskFamily.NATIVE_CHART_REPAIR: frozenset(
@@ -58,6 +94,10 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
             "remove_chart_title",
             "set_series_color",
             "set_chart_value",
+            "set_chart_direction",
+            "set_chart_grouping",
+            "set_chart_legend_position",
+            "set_chart_marker",
         }
     ),
     TaskFamily.NATIVE_TABLE_REPAIR: frozenset(
@@ -71,6 +111,21 @@ ALLOWED_OPERATIONS: dict[TaskFamily, frozenset[str]] = {
 }
 
 OPERATION_SCORE_COMPONENTS: dict[str, frozenset[str]] = {
+    "set_rotation": frozenset({"rotation"}),
+    "set_font_size": frozenset({"font_size"}),
+    "set_paragraph_alignment": frozenset({"paragraph_alignment"}),
+    "set_paragraph_bullet": frozenset({"paragraph_bullet"}),
+    "set_paragraph_indent": frozenset({"paragraph_indent"}),
+    "set_text_color": frozenset({"text_color"}),
+    "set_text_emphasis": frozenset({"text_emphasis"}),
+    "set_flip": frozenset({"flip"}),
+    "set_picture_crop": frozenset({"picture_crop"}),
+    "set_shape_preset": frozenset({"shape_preset"}),
+    "set_line_style": frozenset({"line_style"}),
+    "set_chart_direction": frozenset({"chart_direction"}),
+    "set_chart_grouping": frozenset({"chart_grouping"}),
+    "set_chart_legend_position": frozenset({"chart_legend_position"}),
+    "set_chart_marker": frozenset({"chart_markers"}),
     "move_shape": frozenset({"geometry"}),
     "resize_shape": frozenset({"geometry"}),
     "swap_geometry": frozenset({"geometry", "z_order"}),
