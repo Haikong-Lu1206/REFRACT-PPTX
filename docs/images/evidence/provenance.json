@@ -1,0 +1,113 @@
+{
+  "source_title": "REFRACT Evaluator Demonstration",
+  "source_sha256": "71be84df6ea47cf1df0d7e921d0fdc3c02dcfcefa6f4544a075b6a7f260054a8",
+  "evidence_kind": "historical demonstration, not a current evaluator rerun",
+  "runtime_revision": "not recorded in the supplied presentation",
+  "method": "Extract embedded image bytes and displayed scores; no pixel edits. Slide chrome and task identifiers are not reproduced.",
+  "pages": [
+    {
+      "source_page": 3,
+      "title": "Picture: identity, position and size",
+      "panels": [
+        {
+          "image": "picture-geometry-1.png",
+          "sha256": "5270b7b8485216b1d1ddf56553c3bb1f0ac051d41b43a60e96f9a1cb5d6a5849",
+          "displayed_progress": "0.000"
+        },
+        {
+          "image": "picture-geometry-2.png",
+          "sha256": "5f5d19346edf42f1db0994928b85e5408e6dd292716f68a77484cadfbad64577",
+          "displayed_progress": "0.046"
+        },
+        {
+          "image": "picture-geometry-3.png",
+          "sha256": "2fb698c617062e5f492e143cbaacdc68c17694bb703a8a887c12a7fd20e932a3",
+          "displayed_progress": "0.475"
+        },
+        {
+          "image": "picture-geometry-4.png",
+          "sha256": "e7a96491ea54444a0aff9544bf4c575d74a225d80778154813ea77b5efcbfc75",
+          "displayed_progress": "1.000"
+        }
+      ]
+    },
+    {
+      "source_page": 4,
+      "title": "Picture: crop, rotation, flip and effects",
+      "panels": [
+        {
+          "image": "picture-transform-1.png",
+          "sha256": "5ea8c97c5cb7381b2fccbbf7a967d77d248c96aed259e1b0fce367167d0682ee",
+          "displayed_progress": "0.000"
+        },
+        {
+          "image": "picture-transform-2.png",
+          "sha256": "1c843ace01ebc11e87e58490a697f1d398712edcbf8e007fd4c6a2f091b341e8",
+          "displayed_progress": "0.049"
+        },
+        {
+          "image": "picture-transform-3.png",
+          "sha256": "b8fb2a39e250117185b9bcd5d205e69cfec799fc39ffb9adf8d6325a82f08480",
+          "displayed_progress": "0.604"
+        },
+        {
+          "image": "picture-transform-4.png",
+          "sha256": "21ed1b4359ca04d7645b20bc44cbb64493cb845f95a732183b2421ec01044e62",
+          "displayed_progress": "1.000"
+        }
+      ]
+    },
+    {
+      "source_page": 15,
+      "title": "Cross-slide state consistency",
+      "panels": [
+        {
+          "image": "cross-slide-state-1.png",
+          "sha256": "804a50c1c0276be5b8acfa2b5d9a0f040d8eee21cb8097674fc8ef10ed17ff7b",
+          "displayed_progress": "0.000"
+        },
+        {
+          "image": "cross-slide-state-2.png",
+          "sha256": "59e6db196b0e8d81f5c91e59cec1ce83d91bc645e374e3c4551785249c0bf1fc",
+          "displayed_progress": "0.338"
+        },
+        {
+          "image": "cross-slide-state-3.png",
+          "sha256": "4d227dca79691e33c8ea45a0e95e9bc5f0993f7c86f35e807b8631efd02311a9",
+          "displayed_progress": "0.662"
+        },
+        {
+          "image": "cross-slide-state-4.png",
+          "sha256": "b3faa9bade3542ca6eff0b43312b3e2392764aee7a833b7e39748b575f6ca982",
+          "displayed_progress": "1.000"
+        }
+      ]
+    },
+    {
+      "source_page": 6,
+      "title": "Table: geometry, proportions and visible style",
+      "panels": [
+        {
+          "image": "table-calibration-1.png",
+          "sha256": "c2dab004e700fc3aafacb52992e1c72af20c2ee8a71be15dc5e00841971b2367",
+          "displayed_progress": "0.728"
+        },
+        {
+          "image": "table-calibration-2.png",
+          "sha256": "6089bb24e1de55847fec0cf66ecbf93c587e102c4823d12df0ff1eef7b9f2dbb",
+          "displayed_progress": "0.928"
+        },
+        {
+          "image": "table-calibration-3.png",
+          "sha256": "2232ae81abc2ecc78345c682e196c3ec79eba388f641852fd0bc4ee337c2159d",
+          "displayed_progress": "0.952"
+        },
+        {
+          "image": "table-calibration-4.png",
+          "sha256": "a5e7afcc433bbeafdf76f387c5fa753a96dc4d4d417dcf39f72d4f57fc81f1f5",
+          "displayed_progress": "1.000"
+        }
+      ]
+    }
+  ]
+}

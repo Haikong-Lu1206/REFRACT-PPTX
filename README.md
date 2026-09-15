@@ -12,8 +12,20 @@ REFRACT is an agent-guided factory for mining real presentations, designing cont
 failures, and building robust reconstruction tasks. It combines presentation-specific
 reasoning with deterministic OOXML mutation, normalized evaluation, and adversarial gates.
 
+**Built from real frontier-model rollouts, not just synthetic corruption.** REFRACT distills
+the maintainers' experience scaling presentation tasks, studying model trajectories, finding
+unfair scores and shortcut solutions, and iterating on task design and evaluation. That
+experience is the foundation of the project: presentation-specific task design, credit for
+honest partial repairs, tolerance for equivalent objects, and checks on the saved artifact.
+
+The methodology comes from an iterated production pipeline; this open-source implementation
+is a scoped Alpha migration. See [rollout-driven design and evaluation evidence](docs/empirical-evidence.md)
+for concrete examples, a calibration failure, and the boundary between historical evidence
+and what you can reproduce in this release.
+
 The repository contains the framework, contracts, and synthetic examples. It does **not**
-ship generated tasks, source corpora, presentation assets, or private evaluation data.
+ship generated tasks, source corpora, or private rollout data. Selected documentation-only
+image excerpts from an evaluator demonstration are included with source hashes.
 
 [Get started](docs/getting-started.md) · [Authoring skill](skills/refract-task-author/SKILL.md) ·
 [Design lessons](docs/task-design.md) · [Runner integration](docs/runner-adapters.md) ·
@@ -32,6 +44,22 @@ REFRACT separates the work into three parts:
 
 This keeps creative task design where judgment is useful while making generation,
 validation, and scoring reproducible.
+
+## Evaluation made visible
+
+Selected historical production examples show why identity and placement are scored separately:
+
+| Wrong asset | Correct asset, large geometry error | Smaller geometry error | Reference |
+|---|---|---|---|
+| ![Wrong asset](docs/images/evidence/picture-geometry-1.png) | ![Large position and size error](docs/images/evidence/picture-geometry-2.png) | ![Smaller position and size error](docs/images/evidence/picture-geometry-3.png) | ![Reference](docs/images/evidence/picture-geometry-4.png) |
+| **0.000** | **0.046** | **0.475** | **1.000** |
+
+These are extracted candidate images and recorded episode-progress scores from the supplied
+demonstration, not scores assigned to illustrative mockups. The
+[evidence gallery](docs/empirical-evidence.md#selected-visual-evidence) also covers crop/rotation,
+incremental cross-slide repairs, and a high-scoring visual failure that exposed weak calibration.
+It documents the source and limits of the evidence: historical results are not a rerun of this
+Alpha. Use the executable demo below to check the current implementation.
 
 ## Task families
 

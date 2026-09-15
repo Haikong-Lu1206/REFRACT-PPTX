@@ -26,6 +26,9 @@ build/
 *.gif
 *.webp
 
+# Selected documentation evidence only; task/corpus images remain excluded.
+!docs/images/evidence/*.png
+
 # Local credentials and provider configuration.
 .env
 *.local.toml
