@@ -1,5 +1,11 @@
 # REFRACT
 
+[![CI](https://github.com/Haikong-Lu1206/REFRACT-PPTX/actions/workflows/ci.yml/badge.svg)](https://github.com/Haikong-Lu1206/REFRACT-PPTX/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+**Alpha software.** Start with the demo, then validate a small batch in your target editor.
+See [compatibility and validation](docs/compatibility.md) before production deployment.
+
 **Reference-guided Evaluation Framework for Reconstruction and Agent-designed Controlled Transformations**
 
 REFRACT is an agent-guided factory for mining real presentations, designing controlled
@@ -31,8 +37,8 @@ validation, and scoring reproducible.
 
 - **Reference reconstruction** repairs missing or damaged pictures, text, fills, and geometry
   using a rendered reference and supplied materials while preserving editability.
-- **Spatial structure repair** restores geometry, z-order, overlap, connectors, arrows, and
-  cross-slide spatial relationships.
+- **Spatial structure repair** restores object geometry and z-order across selected slides,
+  with native connector and arrow contracts. Rendered occlusion is not fully evaluated.
 - **Native chart repair** restores chart data and native chart semantics together with the
   surrounding layout.
 - **Native table repair** restores cell content and fill plus editable row and column
@@ -261,18 +267,30 @@ should be excluded unless separate permission has been obtained.
 
 See [Evaluation](docs/evaluation.md) for the exact current contract.
 
-## Current boundary
+## Supported scope
 
-Version 0.6 is an executable, tested foundation, not a claim that every production capability
-has been migrated or every editor is compatible. The release gate checks real-review receipts;
-the core test suite does not manufacture real WPS compatibility evidence.
+Version 0.6 supports the registered operations listed above. Real WPS end-to-end compatibility
+has not been established for this release. Validate the saved output in your target environment;
+the Python test suite uses synthetic fixtures.
 
 The executable core currently covers registered shape, picture, text/fill, spatial, z-order,
 native chart, native table, and connector operations. SmartArt topology, animations,
 transitions, and an office-specific automation driver are not yet registered mutation plugins.
 Real-office evidence can already be recorded and enforced after an external WPS or LibreOffice
 save/reopen run. Unsupported native families are not advertised to the design agent and cannot
-pass the production gate.
+pass the production gate. See [compatibility](docs/compatibility.md) for acceptance steps.
+
+## Installation and releases
+
+Use a versioned [Alpha release](https://github.com/Haikong-Lu1206/REFRACT-PPTX/releases) to keep
+experiments reproducible. Releases include a wheel, source distribution and SHA-256 checksums.
+The source distribution contains the optional authoring skill and documentation. The development
+installation in Quick start follows the current repository checkout. PyPI publication is not enabled.
+
+## License
+
+The framework and original documentation are available under the [MIT License](LICENSE).
+This license does not cover third-party presentations or materials supplied to the pipeline.
 
 ## Development
 

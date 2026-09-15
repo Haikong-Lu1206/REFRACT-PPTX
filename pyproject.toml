@@ -4,9 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "refract-pptx"
-version = "0.6.0"
+version = "0.6.1"
 description = "Agent-guided task factory for editable presentation reconstruction"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [
   { name = "Haikong Lu" },
@@ -35,6 +37,11 @@ dev = [
 
 [project.scripts]
 refract = "refract_pptx.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Haikong-Lu1206/REFRACT-PPTX"
+Documentation = "https://github.com/Haikong-Lu1206/REFRACT-PPTX/blob/main/docs/getting-started.md"
+Issues = "https://github.com/Haikong-Lu1206/REFRACT-PPTX/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/refract_pptx"]

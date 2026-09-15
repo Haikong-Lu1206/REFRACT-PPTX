@@ -1,12 +1,18 @@
 # Changelog
 
+## 0.6.1
+
+- MIT license and package license metadata.
+- CI-gated Alpha releases with wheel, source distribution and checksums.
+- User-facing compatibility scope and target-editor acceptance procedure.
+
 ## 0.6.0
 
 - Workspace initialization, task preparation and explicit design-agent handoff.
 - Readiness diagnostics and resumable workspace batch builds without manual JSONL assembly.
 - Optional portable authoring skill using the same CLI and evidence rules.
 - README visual guide: lifecycle, verifier separation, and measured demo progress.
-- Original reproducible SVG diagrams; no historical task assets included.
+- Original reproducible SVG diagrams.
 
 ## 0.5.0
 
@@ -22,5 +28,5 @@
 - Getting-started guide, mutation parameter reference, evaluation lessons and explicit limits.
 - Cross-platform CI matrix and runnable synthetic regression tests.
 
-No existing task bundles, source corpus, or private assets are included. This version does not
-claim complete SmartArt/animation migration or universal WPS/LibreOffice compatibility.
+Task bundles and source corpora are not included. SmartArt and animation scoring are incomplete;
+WPS/LibreOffice compatibility requires validation in the deployment environment.
