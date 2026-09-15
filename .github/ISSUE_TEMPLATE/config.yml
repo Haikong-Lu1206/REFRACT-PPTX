@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation and setup
+    url: https://github.com/Haikong-Lu1206/REFRACT-PPTX/blob/main/docs/getting-started.md
+    about: Installation, first task and batch workflow.
+  - name: Report a security vulnerability privately
+    url: https://github.com/Haikong-Lu1206/REFRACT-PPTX/security/advisories/new
+    about: Do not disclose exploitable bypasses or sensitive data in public issues.

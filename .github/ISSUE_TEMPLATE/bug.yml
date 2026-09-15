@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible installation, generation, scoring or integration problem.
+body:
+  - type: markdown
+    attributes:
+      value: "Use synthetic examples. Do not attach confidential decks, credentials or private rollout traces. Report exploitable security issues through Security > Report a vulnerability."
+  - type: input
+    id: version
+    attributes:
+      label: REFRACT version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, installation method and editor/version if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Exact command and minimal synthetic input or generation script.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual behavior
+      description: Include sanitized diagnostics. For scoring issues, include component scores and which comparison is unfair.
+    validations:
+      required: true

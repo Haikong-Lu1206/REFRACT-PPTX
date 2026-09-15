@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/Haikong-Lu1206/REFRACT-PPTX/actions/workflows/ci.yml/badge.svg)](https://github.com/Haikong-Lu1206/REFRACT-PPTX/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/Haikong-Lu1206/REFRACT-PPTX?include_prereleases)](https://github.com/Haikong-Lu1206/REFRACT-PPTX/releases)
 
-**Alpha software.** Start with the demo, then validate a small batch in your target editor.
-See [compatibility and validation](docs/compatibility.md) before production deployment.
+**Design, generate and evaluate editable presentation repair tasks.**
 
 **Reference-guided Evaluation Framework for Reconstruction and Agent-designed Controlled Transformations**
 
@@ -22,6 +22,9 @@ The methodology comes from an iterated production pipeline; this open-source imp
 is a scoped Alpha migration. See [rollout-driven design and evaluation evidence](docs/empirical-evidence.md)
 for concrete examples, a calibration failure, and the boundary between historical evidence
 and what you can reproduce in this release.
+
+**Release status: Alpha.** Start with the executable demo, then validate a small batch in your
+target editor. See [compatibility and validation](docs/compatibility.md) before deployment.
 
 The repository contains the framework, contracts, and synthetic examples. It does **not**
 ship generated tasks, source corpora, or private rollout data. Selected documentation-only
@@ -314,6 +317,22 @@ Use a versioned [Alpha release](https://github.com/Haikong-Lu1206/REFRACT-PPTX/r
 experiments reproducible. Releases include a wheel, source distribution and SHA-256 checksums.
 The source distribution contains the optional authoring skill and documentation. The development
 installation in Quick start follows the current repository checkout. PyPI publication is not enabled.
+
+## Documentation and support
+
+| Goal | Start here |
+|---|---|
+| Run the demo and build your first collection | [Getting started](docs/getting-started.md) |
+| Understand inputs, model integration and editor requirements | [FAQ](docs/faq.md) |
+| Design useful scoring points | [Task design](docs/task-design.md) and [authoring skill](skills/refract-task-author/SKILL.md) |
+| Inspect exact scoring rules and validation | [Evaluation](docs/evaluation.md) and [production workflow](docs/production.md) |
+| Connect a rollout runner | [Runner adapters](docs/runner-adapters.md) |
+| Review development evidence and current limits | [Empirical evidence](docs/empirical-evidence.md) and [compatibility](docs/compatibility.md) |
+| Report an issue or contribute a capability | [Issue tracker](https://github.com/Haikong-Lu1206/REFRACT-PPTX/issues) and [contribution guide](CONTRIBUTING.md) |
+
+Report reproducible bugs with the version, command, environment and expected/actual result.
+Use a minimal synthetic example; do not upload confidential decks or hidden evaluator state.
+Report vulnerabilities through the [security policy](SECURITY.md).
 
 ## License
 

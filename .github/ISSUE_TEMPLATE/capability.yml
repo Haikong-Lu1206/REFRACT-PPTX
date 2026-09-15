@@ -1,0 +1,19 @@
+name: Capability proposal
+description: Propose a reusable task family, evaluation contract or workflow improvement.
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Use case and current limitation
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Observable evidence and valid solutions
+      description: What can the solver infer, and which equivalent repair methods should receive credit?
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation approach
+      description: Suggested honest partial repairs, adversarial cases and target-editor checks.

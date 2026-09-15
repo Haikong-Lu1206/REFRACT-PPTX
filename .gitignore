@@ -31,5 +31,18 @@ build/
 
 # Local credentials and provider configuration.
 .env
+.env.*
+!.env.example
+auth.json
+credentials.json
+credentials.*.json
+service-account*.json
+*service_account*.json
+.netrc
+.npmrc
+*.pem
+*.key
+.codex/
+.claude/
 *.local.toml
 *.local.yaml

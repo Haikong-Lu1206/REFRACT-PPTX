@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2
+
+- Public Alpha documentation with a clear installation, authoring and deployment path.
+- Historical evaluator image excerpts, score provenance and explicit calibration limitations.
+- FAQ, contribution workflow, structured issue forms and private security reporting guidance.
+- No evaluator behavior or task contract changes from 0.6.1.
+
 ## 0.6.1
 
 - MIT license and package license metadata.

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "refract-pptx"
-version = "0.6.1"
+version = "0.6.2"
 description = "Agent-guided task factory for editable presentation reconstruction"
 readme = "README.md"
 license = "MIT"
